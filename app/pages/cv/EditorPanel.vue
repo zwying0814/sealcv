@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { onMounted, onBeforeUnmount, ref, watch, nextTick } from 'vue'
-import { useLocalStorage } from '@vueuse/core'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useCustomCss } from '@/composables/useCustomCss'
 
@@ -14,7 +13,6 @@ interface Props { modelValue?: string }
 const props = withDefaults(defineProps<Props>(), { modelValue: '' })
 const emit = defineEmits<{ (e: 'update:modelValue', v: string): void }>()
 
-const storage = useLocalStorage<string>('cv-editor-content', props.modelValue ?? '# Markdown\n\n')
 const { customCss } = useCustomCss()
 
 async function initMarkdownEditor() {
@@ -22,7 +20,7 @@ async function initMarkdownEditor() {
   const monaco = await import('monaco-editor/esm/vs/editor/editor.api')
   await import('monaco-editor/esm/vs/basic-languages/markdown/markdown.contribution')
   markdownInstance = monaco.editor.create(markdownEl.value as HTMLDivElement, {
-    value: storage.value,
+    value: props.modelValue ?? '',
     language: 'markdown',
     theme: document.documentElement.classList.contains('dark') ? 'vs-dark' : 'vs',
     automaticLayout: true,
@@ -30,10 +28,8 @@ async function initMarkdownEditor() {
     minimap: { enabled: false },
     wordWrap: 'on'
   })
-  emit('update:modelValue', storage.value)
   markdownInstance.onDidChangeModelContent(() => {
     const v = markdownInstance.getValue()
-    storage.value = v
     emit('update:modelValue', v)
   })
 }
@@ -75,7 +71,6 @@ watch(activeTab, async (tab) => {
 watch(() => props.modelValue, (v) => {
   if (!markdownInstance) return
   if (v !== markdownInstance.getValue()) markdownInstance.setValue(v ?? '')
-  storage.value = v ?? ''
 })
 
 onBeforeUnmount(() => {

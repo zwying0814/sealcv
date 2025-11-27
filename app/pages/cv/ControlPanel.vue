@@ -2,7 +2,7 @@
 import { ref, watch } from 'vue'
 import { Button } from '@/components/ui/button'
 import { Slider } from '@/components/ui/slider'
-import { InputGroup, InputGroupAddon, InputGroupText } from '@/components/ui/input-group'
+import { InputGroup, InputGroupAddon, InputGroupText, InputGroupInput } from '@/components/ui/input-group'
 import {
   Select,
   SelectContent,
@@ -14,6 +14,9 @@ import {
 import PhotoUploadButton from './PhotoUploadButton.vue'
 import { PAPER_SIZES } from '@/lib/paperSizes'
 import type { PaperSizeKey } from '@/lib/paperSizes'
+import { snapdom } from '@zumer/snapdom'
+import { jsPDF } from 'jspdf'
+import { toast } from 'vue-sonner'
 
 interface Props { scale: number, maxScale: number, paddingX: number, paddingY: number, paperSize: PaperSizeKey, smartOnePage: boolean }
 const props = defineProps<Props>()
@@ -49,6 +52,64 @@ function toggleSmartOnePage() {
   if (paperSize.value === 'free') return
   emit('update:smartOnePage', !props.smartOnePage)
 }
+
+const exporting = ref(false)
+async function exportToPdf() {
+  if (exporting.value) return
+  if (typeof window === 'undefined') {
+    toast.error('当前环境无法导出')
+    return
+  }
+  const pageNodes = Array.from(document.querySelectorAll('.pages')) as HTMLElement[]
+  if (!pageNodes.length) {
+    toast.error('未找到预览区域，无法导出')
+    return
+  }
+  exporting.value = true
+  try {
+    const canvases: HTMLCanvasElement[] = []
+    for (const node of pageNodes) {
+      const canvas = await snapdom.toCanvas(node, {
+        embedFonts: true,
+        outerTransforms: true,
+        outerShadows: false,
+        scale: 2,
+      })
+      canvases.push(canvas)
+    }
+    const pxToPt = (px: number) => (px * 72) / 96
+    const first = canvases[0]
+    if (!first) {
+      toast.error('无法获取预览内容')
+      return
+    }
+    const initialWidthPt = pxToPt(first.width)
+    const initialHeightPt = pxToPt(first.height)
+    const orientation = initialWidthPt > initialHeightPt ? 'l' : 'p'
+    const pdf = new jsPDF({ orientation, unit: 'pt', format: [initialWidthPt, initialHeightPt] })
+    canvases.forEach((canvas, idx) => {
+      if (idx > 0) {
+        const wPt = pxToPt(canvas.width)
+        const hPt = pxToPt(canvas.height)
+        const pageOrientation = wPt > hPt ? 'l' : 'p'
+        pdf.addPage([wPt, hPt], pageOrientation)
+        pdf.setPage(idx + 1)
+      }
+      const widthPt = pxToPt(canvas.width)
+      const heightPt = pxToPt(canvas.height)
+      const imgData = canvas.toDataURL('image/jpeg', 0.95)
+      pdf.addImage(imgData, 'JPEG', 0, 0, widthPt, heightPt, undefined, 'FAST')
+    })
+    const filename = `sealcv-${new Date().toISOString().slice(0, 10)}.pdf`
+    pdf.save(filename)
+    toast.success('导出 PDF 成功')
+  } catch (err) {
+    console.error(err)
+    toast.error('导出失败，请稍后重试')
+  } finally {
+    exporting.value = false
+  }
+}
 </script>
 
 <template>
@@ -75,6 +136,9 @@ function toggleSmartOnePage() {
     <Button variant="secondary" size="sm" class="w-full" :disabled="paperSize === 'free'" :data-active="props.smartOnePage"
       :class="props.smartOnePage ? 'bg-primary text-primary-foreground hover:bg-primary/90' : ''" @click="toggleSmartOnePage">
       {{ props.smartOnePage ? '取消智能一页' : '智能一页' }}
+    </Button>
+    <Button variant="outline" size="sm" class="w-full" :disabled="exporting" @click="exportToPdf">
+      {{ exporting ? '导出中...' : '导出为 PDF' }}
     </Button>
     <div class="text-sm">缩放 {{ Math.round((scaleArr[0] ?? 1) * 100) }}%</div>
     <div class="flex items-center gap-2">

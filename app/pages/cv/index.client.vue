@@ -3,7 +3,7 @@ import Navbar from './Navbar.vue'
 import EditorPanel from './EditorPanel.vue'
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable'
 import { ref, computed, watch } from 'vue'
-import { useElementSize } from '@vueuse/core'
+import { useElementSize, useLocalStorage } from '@vueuse/core'
 import MarkdownPreview from './MarkdownPreview.vue'
 import ControlPanel from './ControlPanel.vue'
 import type { PaperSizeKey } from '@/lib/paperSizes'
@@ -29,7 +29,7 @@ const minSizePercent = computed(() => {
   const pct = (200 / w) * 100
   return Math.min(100, Math.max(1, pct))
 })
-const markdownText = ref<string>('')
+const markdownText = useLocalStorage<string>('cv-editor-content', '# Markdown\n\n')
 const previewScale = ref<number>(1)
 const previewScaleArr = ref<number[]>([previewScale.value])
 const maxScale = ref<number>(2)

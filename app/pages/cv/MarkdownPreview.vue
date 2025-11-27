@@ -48,7 +48,7 @@ function init() {
   initialized.value = true
 }
 
-const renderThrottled = useThrottleFn((src: string) => {
+function render(src: string) {
   try {
     init()
     if (src === lastSrc.value) {
@@ -64,17 +64,17 @@ const renderThrottled = useThrottleFn((src: string) => {
   } catch {
     /* ignore */
   }
-}, 120)
+}
+
+const renderThrottled = useThrottleFn(render, 120, true, false)
 
 watch(() => props.markdownText, (v) => {
   renderThrottled(v || '')
 }, { immediate: true })
 
 onMounted(() => {
-  renderThrottled(props.markdownText || '')
-})
-onUpdated(() => {
-  renderThrottled(props.markdownText || '')
+  // 立即执行一次渲染，确保首次挂载时有内容
+  render(props.markdownText || '')
 })
 
 const localScale = ref<number>(props.scale ?? 1)
