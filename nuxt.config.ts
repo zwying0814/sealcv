@@ -6,7 +6,7 @@ export default defineNuxtConfig({
   vite: {
     plugins: [tailwindcss()],
   },
-  modules: ['shadcn-nuxt'],
+  modules: ['shadcn-nuxt', '@nuxt/image'],
   shadcn: {
     /**
      * Prefix for all the imported component.
@@ -23,6 +23,25 @@ export default defineNuxtConfig({
   },
   pages: {
     pattern: ['**/index.vue', '**/index.client.vue']
+  },
+    app: {
+    head: {
+      link: [
+        {
+          rel: 'preconnect',
+          href: 'https://fonts.googleapis.com'
+        },
+        {
+          rel: 'preconnect',
+          href: 'https://fonts.gstatic.com',
+          crossorigin: ''
+        },
+        {
+          rel: 'stylesheet',
+          href: 'https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Noto+Sans+SC:wght@100..900&display=swap'
+        }
+      ]
+    }
   },
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },

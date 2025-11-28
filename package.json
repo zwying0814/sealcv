@@ -10,6 +10,7 @@
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
+    "@nuxt/image": "2.0.0",
     "@tailwindcss/vite": "^4.1.17",
     "@vueuse/core": "^14.0.0",
     "@zumer/snapdom": "^2.0.1",
@@ -19,6 +20,7 @@
     "lucide-vue-next": "^0.553.0",
     "marked": "^17.0.0",
     "monaco-editor": "^0.54.0",
+    "motion-v": "^1.7.4",
     "nuxt": "^4.2.1",
     "reka-ui": "^2.6.0",
     "shadcn-nuxt": "2.3.2",

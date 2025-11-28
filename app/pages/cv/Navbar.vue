@@ -1,13 +1,7 @@
 <template>
     <header class="p-1">
         <nav class="bg-white border rounded-md px-4 h-12 flex items-center justify-between backdrop-blur-sm">
-            <NuxtLink to="/">
-                <div class="flex items-center gap-2 text-lg font-semibold text-slate-800">
-                    <span
-                        class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 text-white text-base font-bold">S</span>
-                    <span>SealCV</span>
-                </div>
-            </NuxtLink>
+            <Logo />
             <Button variant="ghost" size="sm" as-child>
                 <a href="https://github.com/zwying0814/sealcv" target="_blank">
                     <svg viewBox="0 0 438.549 438.549" class="size-5">
