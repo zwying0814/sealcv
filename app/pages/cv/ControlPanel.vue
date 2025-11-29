@@ -32,16 +32,18 @@ const scaleArr = ref<number[]>([props.scale])
 watch(() => props.scale, (v) => { scaleArr.value = [v] })
 watch(scaleArr, (v) => { const s = Array.isArray(v) ? (v[0] ?? 1) : 1; emit('update:scale', s) })
 
-const x = ref<number>(props.paddingX ?? 24)
-const y = ref<number>(props.paddingY ?? 24)
+const LR = 40;
+const TB = 30;
+const x = ref<number>(props.paddingX ?? LR)
+const y = ref<number>(props.paddingY ?? TB)
 const xArr = ref<number[]>([x.value])
 const yArr = ref<number[]>([y.value])
-watch(() => props.paddingX, (v) => { x.value = Number(v ?? 24) })
-watch(() => props.paddingY, (v) => { y.value = Number(v ?? 24) })
+watch(() => props.paddingX, (v) => { x.value = Number(v ?? LR) })
+watch(() => props.paddingY, (v) => { y.value = Number(v ?? TB) })
 watch(x, (v) => { xArr.value = [v]; emit('update:paddingX', Math.min(80, Math.max(5, Number(v) || 0))) })
 watch(y, (v) => { yArr.value = [v]; emit('update:paddingY', Math.min(80, Math.max(5, Number(v) || 0))) })
-watch(xArr, (v) => { const s = Array.isArray(v) ? (v[0] ?? 24) : 24; x.value = Math.min(80, Math.max(5, s)) })
-watch(yArr, (v) => { const s = Array.isArray(v) ? (v[0] ?? 24) : 24; y.value = Math.min(80, Math.max(5, s)) })
+watch(xArr, (v) => { const s = Array.isArray(v) ? (v[0] ?? TB) : TB; x.value = Math.min(80, Math.max(5, s)) })
+watch(yArr, (v) => { const s = Array.isArray(v) ? (v[0] ?? TB) : TB; y.value = Math.min(80, Math.max(5, s)) })
 
 const paperSize = ref<PaperSizeKey>(props.paperSize ?? 'a4')
 const paperSizeKeys = Object.keys(PAPER_SIZES) as PaperSizeKey[]

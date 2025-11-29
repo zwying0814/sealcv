@@ -171,7 +171,7 @@ onUnmounted(() => {
   >
     <img
       :src="photo.src"
-      class="w-full h-auto block rounded-sm shadow-sm cursor-move"
+      class="w-full h-auto block shadow-sm cursor-move"
       :class="{ 'ring-2 ring-blue-500': isSelected }"
       draggable="false"
     />
@@ -187,15 +187,15 @@ onUnmounted(() => {
       
       <!-- Anchors -->
       <div
-        class="absolute -top-1 -left-1 w-3 h-3 bg-blue-500 border border-white rounded-full cursor-nwse-resize z-50"
+        class="absolute -top-1 -left-1 w-3 h-3 bg-primary border border-white rounded-full cursor-nwse-resize z-50"
         @mousedown.stop="onResizeStart($event, 'top-left')"
       ></div>
       <div
-        class="absolute -bottom-1 -left-1 w-3 h-3 bg-blue-500 border border-white rounded-full cursor-nesw-resize z-50"
+        class="absolute -bottom-1 -left-1 w-3 h-3 bg-primary border border-white rounded-full cursor-nesw-resize z-50"
         @mousedown.stop="onResizeStart($event, 'bottom-left')"
       ></div>
       <div
-        class="absolute -bottom-1 -right-1 w-3 h-3 bg-blue-500 border border-white rounded-full cursor-nwse-resize z-50"
+        class="absolute -bottom-1 -right-1 w-3 h-3 bg-primary border border-white rounded-full cursor-nwse-resize z-50"
         @mousedown.stop="onResizeStart($event, 'bottom-right')"
       ></div>
     </template>

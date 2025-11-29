@@ -94,17 +94,19 @@ export function registerIconInlineExtension() {
       return src.indexOf('icon=');
     },
     tokenizer(src: string) {
-      const m = src.match(/^icon=([^\s]+)(?:\s|$)/);
+      const m = src.match(/^icon=([^\s]+)(?:\s+([^\n]+))?/);
       if (!m || !m[1]) return;
       return {
         type: 'iconify-inline',
         raw: m[0],
         icon: m[1].trim(),
+        text: (m[2] ?? '').trim(),
       } as any;
     },
     renderer(token: any) {
       const name = token.icon as string;
-      return `<iconify-icon icon="${name}" class="${name}"></iconify-icon>`;
+      const trailing = token.text ? marked.parseInline(token.text) : '';
+      return `<p class="icon-line"><iconify-icon icon="${name}" class="${name}"></iconify-icon>${trailing ? `<span class="icon-text">${trailing}</span>` : ''}</p>`;
     },
   } as any;
 

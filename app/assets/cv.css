@@ -9,7 +9,7 @@
 
 .cv p,
 .cv li {
-    font-family: "LapisCV Icon", var(--text-font);
+    font-family: var(--text-font);
     font-size: var(--text-size);
     line-height: var(--line-height);
     color: var(--text-normal);
@@ -21,13 +21,13 @@
 .cv h2,
 .cv h3 {
     font-weight: bold;
-    font-family: "LapisCV Icon", var(--title-font);
+    font-family: var(--title-font);
 }
 
 .cv h1 {
     font-size: var(--h1-size);
     color: var(--h1-color);
-    line-height: 1.5;
+    line-height: 2;
     border-bottom: 0;
 }
 
@@ -72,18 +72,6 @@
     margin-bottom: 0;
 }
 
-@media print {
-
-    .cv h1,
-    .cv h2,
-    .cv h3,
-    .cv h4,
-    .cv h5,
-    .cv h6 {
-        page-break-after: avoid;
-    }
-}
-
 .cv strong {
     color: var(--text-strong);
 }
@@ -125,34 +113,6 @@
     font-weight: normal;
 }
 
-/* Avatar */
-
-.cv .avatar,
-.cv img[alt="avatar"] {
-    display: block;
-    position: relative;
-    top: 1mm;
-    right: 0;
-    z-index: 9999;
-    float: right;
-    object-fit: cover;
-    overflow: hidden;
-
-    width: var(--avatar-width);
-    height: var(--avatar-width);
-    border-radius: 50%;
-    border: 2px solid var(--border-color);
-    box-shadow: 0 0 0 3mm var(--background-primary);
-    margin: 0 0 0 3mm;
-}
-
-.cv p:has(.avatar, img[alt="avatar"]) {
-    height: 0;
-    text-align: center;
-    padding: 0;
-    margin: 0;
-}
-
 /* Link */
 
 .cv a {
@@ -165,8 +125,10 @@
 
 .cv code {
     background-color: var(--background-primary);
-    color: var(--text-normal) !important;
-    font-size: var(--text-size);
+    color: var(--color-accent);
+    font-size: 85%;
+    font-weight: bold;
+    padding: 1px 6px;
 }
 
 /* Block Quote */
@@ -197,6 +159,25 @@
     color: var(--color-accent);
 }
 
+.cv .icon-line:has(+ .icon-line) {
+    margin-right: 0.875rem;
+}
+
+.cv .icon-line {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.125rem;
+}
+
+.cv .icon-line iconify-icon {
+    font-size: 1.25em;
+    color: var(--color-accent);
+}
+
+.cv .icon-line .icon-text {
+    flex: 1;
+}
+
 /* Horizontal Line */
 
 .cv hr {
@@ -217,30 +198,29 @@
 
     /* Custom Configs */
 
-    --text-size: 10pt;
+    --text-size: 14px;
     --line-height: 1.8;
-    --avatar-width: 28mm;
 
-    --h1-size: 16pt;
+    --h1-size: 30px;
     --h2-size: 12pt;
     --h3-size: 10.5pt;
     --blockquote-size: 9.5pt;
 
-    --text-font: 'SourceHanSansCN';
-    --title-font: 'SourceHanSansCN';
-    --link-font: 'JetBrainsMono';
-    --code-font: 'JetBrainsMono';
+    --text-font: 'Inter', 'Noto Sans SC';
+    --title-font: 'Inter', 'Noto Sans SC';
+    --link-font: 'Inter';
+    --code-font: 'Inter';
 
-    --color-accent: #00327dac;
-    --text-normal: #353a42;
+    --color-accent: oklab(0.57 -0.04 -0.21);
+    --text-normal: #393939;
     --link-color: var(--color-accent);
-    --text-strong: #353a42;
+    --text-strong: #000;
     --h1-color: var(--text-normal);
     --h2-color: var(--color-accent);
     --h3-color: var(--text-normal);
     --h4-color: var(--text-normal);
-    --border-color: #dae3ea;
-    --background-primary: #fff;
+    --border-color: oklab(0.57 -0.04 -0.21);
+    --background-primary: oklab(0.57 -0.04 -0.21 / 0.05);
 
     font-family: var(--text-font);
 }
@@ -258,7 +238,7 @@
 }
 
 .cv h2 {
-    border-bottom: 1px solid #a2b6d4;
+    border-bottom: 1px solid var(--border-color);
 }
 
 .cv .lr {

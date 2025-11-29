@@ -7,14 +7,22 @@ import { useElementSize, useLocalStorage } from '@vueuse/core'
 import MarkdownPreview from './MarkdownPreview.vue'
 import ControlPanel from './ControlPanel.vue'
 import type { PaperSizeKey } from '@/lib/paperSizes'
+import { defaultResumeContent } from '@/lib/defaultContent'
 import 'vue-sonner/style.css'
 import { Toaster } from '@/components/ui/sonner'
 
 definePageMeta({
   layout: 'main'
 })
+useSeoMeta({
+  title: '简历编辑器 - SealCV',
+  description: '使用 SealCV 在线编辑器制作专业简历，实时 Markdown 预览，支持多种纸张尺寸和 PDF 导出。',
+  ogTitle: '简历编辑器 - SealCV',
+  ogDescription: '在线制作专业简历，实时预览，一键导出 PDF。',
+  robots: 'noindex, nofollow',
+})
 useHead({
-  title: 'SealCV - CV 编辑器',
+  htmlAttrs: { lang: 'zh-CN' },
   script: [
     {
       src: 'https://code.iconify.design/iconify-icon/3.0.2/iconify-icon.min.js',
@@ -29,12 +37,12 @@ const minSizePercent = computed(() => {
   const pct = (200 / w) * 100
   return Math.min(100, Math.max(1, pct))
 })
-const markdownText = useLocalStorage<string>('cv-editor-content', '# Markdown\n\n')
+const markdownText = useLocalStorage<string>('cv-editor-content', defaultResumeContent)
 const previewScale = ref<number>(1)
 const previewScaleArr = ref<number[]>([previewScale.value])
 const maxScale = ref<number>(2)
-const paddingX = ref<number>(24)
-const paddingY = ref<number>(24)
+const paddingX = ref<number>(32)
+const paddingY = ref<number>(32)
 const paperSize = ref<PaperSizeKey>('a4')
 const smartOnePage = ref<boolean>(false)
 watch(previewScale, (v) => {

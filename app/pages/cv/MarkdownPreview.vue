@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { ref, watch, onMounted, onUpdated, computed, nextTick, onBeforeUnmount } from 'vue'
+import { ref, watch, onMounted, computed, nextTick, onBeforeUnmount } from 'vue'
 import { marked } from 'marked'
 import { useThrottleFn, useElementSize } from '@vueuse/core'
 import { registerEqualSplitRowExtension, registerCenterLineExtension, registerIconInlineExtension, registerStrongAdjacencyFix } from '@/lib/markedExtensions'
-import '@/assets/css/cv.css'
+import '@/assets/cv.css'
 import PhotoOverlay from '~/pages/cv/PhotoOverlay.vue'
 import { useCustomCss } from '@/composables/useCustomCss'
 import { PAPER_SIZES } from '@/lib/paperSizes'
@@ -66,7 +66,7 @@ function render(src: string) {
   }
 }
 
-const renderThrottled = useThrottleFn(render, 120, true, false)
+const renderThrottled = useThrottleFn(render, 120, true, true)
 
 watch(() => props.markdownText, (v) => {
   renderThrottled(v || '')
@@ -249,7 +249,7 @@ onBeforeUnmount(() => {
 <template>
   <div
     ref="outer"
-    class="h-[calc(100dvh-3.75rem)] overflow-y-auto overflow-x-hidden border rounded-md bg-gray-400 px-4 pt-6 flex justify-center"
+    class="h-[calc(100dvh-3.75rem)] overflow-y-auto overflow-x-hidden border rounded-md bg-input px-4 pt-6 flex justify-center"
     aria-live="polite"
     style="scrollbar-gutter: stable both-edges;"
   >
