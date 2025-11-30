@@ -39,4 +39,14 @@ pnpm run dev
 
 ## 许可与感谢
 
-保留 MIT/其他许可说明（如果已有可替换）。本项目借助 [Vue 3](https://vuejs.org/)、[Nuxt.js](https://nuxt.com)、[shadcn/ui](https://ui.shadcn.com/vue)、[Monaco Editor](https://microsoft.github.io/monaco-editor/)、[SnapDOM](https://github.com/zumer/snapdom) 与 [jsPDF](https://github.com/parallax/jsPDF)。
+本项目基于 MIT 开源协议发布。  
+在构建与开发过程中，我们借助并深度依赖以下优秀的开源组件与工具：
+
+- [Vue 3](https://vuejs.org/) — 渐进式前端框架
+- [Nuxt.js](https://nuxt.com) — 现代化 Web 应用框架
+- [shadcn/ui](https://ui.shadcn.com/vue) — 可定制的 UI 组件库
+- [Monaco Editor](https://microsoft.github.io/monaco-editor/) — 强大的在线代码编辑器
+- [SnapDOM](https://github.com/zumer/snapdom) — DOM 快照与变更工具
+- [jsPDF](https://github.com/parallax/jsPDF) — JavaScript PDF 生成库
+
+感谢这些开源项目的作者与社区，让本项目得以实现与成长❤️。

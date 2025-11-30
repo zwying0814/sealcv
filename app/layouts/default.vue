@@ -1,10 +1,7 @@
-<script setup lang="ts">
-import RainbowButton from '@/components/ui/rainbow-button/RainbowButton.vue'
-</script>
 <template>
   <div class="min-h-dvh flex flex-col">
     <header class="border-b bg-card text-card-foreground">
-      <div class="max-w-5xl mx-auto px-4 h-12 flex items-center">
+      <div class="max-w-5xl mx-auto px-4 h-14 flex items-center">
         <div class="flex-1">
          <Logo />
         </div>
@@ -12,9 +9,6 @@ import RainbowButton from '@/components/ui/rainbow-button/RainbowButton.vue'
 
         </nav>
         <div class="flex-1 flex justify-end gap-4">
-          <RainbowButton :speed="5" class="px-4 py-1 text-sm h-auto rounded-md font-bold">
-            <NuxtLink to="/cv">✨ 制作简历</NuxtLink>
-          </RainbowButton>
           <Button variant="ghost" size="icon" as-child>
             <a href="https://github.com/zwying0814/sealcv" target="_blank">
               <svg viewBox="0 0 438.549 438.549" class="size-5">

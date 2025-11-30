@@ -3,10 +3,10 @@ import { onMounted, onBeforeUnmount, ref, watch, nextTick } from 'vue'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useCustomCss } from '@/composables/useCustomCss'
 
-const markdownEl = ref<HTMLDivElement | null>(null)
-const cssEl = ref<HTMLDivElement | null>(null)
-let markdownInstance: any
-let cssInstance: any
+const containerEl = ref<HTMLDivElement | null>(null)
+let editorInstance: any = null
+let markdownModel: any = null
+let cssModel: any = null
 const activeTab = ref<string>('markdown')
 
 interface Props { modelValue?: string }
@@ -15,67 +15,70 @@ const emit = defineEmits<{ (e: 'update:modelValue', v: string): void }>()
 
 const { customCss } = useCustomCss()
 
-async function initMarkdownEditor() {
-  if (markdownInstance || !markdownEl.value) return
+async function initEditor() {
+  if (editorInstance || !containerEl.value) return
+
   const monaco = await import('monaco-editor/esm/vs/editor/editor.api')
   await import('monaco-editor/esm/vs/basic-languages/markdown/markdown.contribution')
-  markdownInstance = monaco.editor.create(markdownEl.value as HTMLDivElement, {
-    value: props.modelValue ?? '',
-    language: 'markdown',
-    theme: document.documentElement.classList.contains('dark') ? 'vs-dark' : 'vs',
-    automaticLayout: true,
-    scrollBeyondLastLine: false,
-    minimap: { enabled: false },
-    wordWrap: 'on'
-  })
-  markdownInstance.onDidChangeModelContent(() => {
-    const v = markdownInstance.getValue()
-    emit('update:modelValue', v)
-  })
-}
-
-async function initCssEditor() {
-  if (cssInstance || !cssEl.value) return
-  const monaco = await import('monaco-editor/esm/vs/editor/editor.api')
   await import('monaco-editor/esm/vs/basic-languages/css/css.contribution')
-  cssInstance = monaco.editor.create(cssEl.value as HTMLDivElement, {
-    value: customCss.value,
-    language: 'css',
-    theme: document.documentElement.classList.contains('dark') ? 'vs-dark' : 'vs',
+
+  // 创建 Editor 实例（不设置初始 model）
+  editorInstance = monaco.editor.create(containerEl.value, {
+    theme: 'vs-light',
     automaticLayout: true,
     scrollBeyondLastLine: false,
     minimap: { enabled: false },
-    wordWrap: 'on'
+    wordWrap: 'on',
+    renderWhitespace: "selection",
+    quickSuggestions: false,
+    suggestOnTriggerCharacters: false,
+    fontFamily: 'Consolas, "Noto Sans SC", monospace',
   })
-  cssInstance.onDidChangeModelContent(() => {
-    const v = cssInstance.getValue()
-    customCss.value = v
+
+  // 创建 Markdown Model
+  markdownModel = monaco.editor.createModel(props.modelValue ?? '', 'markdown')
+  markdownModel.onDidChangeContent(() => {
+    emit('update:modelValue', markdownModel.getValue())
   })
+
+  // 创建 CSS Model
+  cssModel = monaco.editor.createModel(customCss.value ?? '', 'css')
+  cssModel.onDidChangeContent(() => {
+    customCss.value = cssModel.getValue()
+  })
+
+  // 设置初始 Model
+  editorInstance.setModel(markdownModel)
 }
 
-onMounted(async () => {
-  await initMarkdownEditor()
-})
-
+// 切换 tab 时切换 Model
 watch(activeTab, async (tab) => {
   await nextTick()
-  if (tab === 'markdown') {
-    await initMarkdownEditor()
-    markdownInstance?.layout()
-  } else if (tab === 'css') {
-    await initCssEditor()
-    cssInstance?.layout()
+  if (!editorInstance) return
+
+  if (tab === 'markdown' && markdownModel) {
+    editorInstance.setModel(markdownModel)
+  } else if (tab === 'css' && cssModel) {
+    editorInstance.setModel(cssModel)
   }
 })
 
+// 外部更新 markdown 内容时同步到 Model
 watch(() => props.modelValue, (v) => {
-  if (!markdownInstance) return
-  if (v !== markdownInstance.getValue()) markdownInstance.setValue(v ?? '')
+  if (!markdownModel) return
+  if (v !== markdownModel.getValue()) {
+    markdownModel.setValue(v ?? '')
+  }
+})
+
+onMounted(async () => {
+  await initEditor()
 })
 
 onBeforeUnmount(() => {
-  if (markdownInstance) markdownInstance.dispose()
-  if (cssInstance) cssInstance.dispose()
+  markdownModel?.dispose()
+  cssModel?.dispose()
+  editorInstance?.dispose()
 })
 </script>
 
@@ -87,11 +90,8 @@ onBeforeUnmount(() => {
         <TabsTrigger value="css" class="flex-1">CSS</TabsTrigger>
       </TabsList>
       <div class="flex-1 relative">
-        <div v-show="activeTab === 'markdown'" class="absolute left-0 right-2 top-2 bottom-2">
-          <div ref="markdownEl" class="absolute inset-0"></div>
-        </div>
-        <div v-show="activeTab === 'css'" class="absolute left-0 right-2 top-2 bottom-2">
-          <div ref="cssEl" class="absolute inset-0"></div>
+        <div class="absolute left-0 right-2 top-2 bottom-2">
+          <div ref="containerEl" class="absolute inset-0"></div>
         </div>
       </div>
     </Tabs>
