@@ -69,13 +69,15 @@ async function exportToPdf() {
   }
   exporting.value = true
   try {
+    const devicePixelRatio = typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1
+    const captureScale = Math.min(4, Math.max(2, devicePixelRatio * 2))
     const canvases: HTMLCanvasElement[] = []
     for (const node of pageNodes) {
       const canvas = await snapdom.toCanvas(node, {
         embedFonts: true,
         outerTransforms: true,
         outerShadows: false,
-        scale: 2,
+        scale: captureScale,
       })
       canvases.push(canvas)
     }
@@ -99,8 +101,8 @@ async function exportToPdf() {
       }
       const widthPt = pxToPt(canvas.width)
       const heightPt = pxToPt(canvas.height)
-      const imgData = canvas.toDataURL('image/jpeg', 0.95)
-      pdf.addImage(imgData, 'JPEG', 0, 0, widthPt, heightPt, undefined, 'FAST')
+      const imgData = canvas.toDataURL('image/png')
+      pdf.addImage(imgData, 'PNG', 0, 0, widthPt, heightPt, undefined, 'FAST')
     })
     const filename = `sealcv-${new Date().toISOString().slice(0, 10)}.pdf`
     pdf.save(filename)
