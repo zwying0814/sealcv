@@ -1,4 +1,4 @@
-export const defaultResumeContent = `# 赵阿卷
+export const defaultResumeContent = `# 阿卷
 
 icon=ri:calendar-todo-fill 出生日期: 1999-01-01 
 icon=ri:mail-fill 邮箱: zaj@example.com
