@@ -24,7 +24,7 @@ export default defineNuxtConfig({
   pages: {
     pattern: ['**/index.vue', '**/index.client.vue']
   },
-    app: {
+  app: {
     head: {
       link: [
         {
