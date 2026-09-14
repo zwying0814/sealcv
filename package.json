@@ -1,0 +1,9 @@
+{
+  "name": "sealcv",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "web:dev": "pnpm -F ./apps/web dev",
+    "web:build": "pnpm -F ./apps/web build"
+  }
+}

@@ -1,0 +1,161 @@
+/* ─── Canvas scrollbar ────────────────────────────────────────── */
+.cv-canvas::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+.cv-canvas::-webkit-scrollbar-thumb {
+  background: hsl(var(--foreground) / 0.16);
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+.cv-canvas::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--foreground) / 0.28);
+  background-clip: content-box;
+}
+.cv-canvas::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* ─── Resume: rendered markdown typography ───────────────────── */
+/* These target dynamically generated HTML from dangerouslySetInnerHTML,
+   so they MUST remain as CSS — Tailwind classes can't be applied to
+   unknown markup produced by the Markdown parser. */
+.cv-resume {
+  color: hsl(var(--foreground));
+  font-family: var(--font-sans, ui-sans-serif, system-ui, sans-serif);
+  line-height: 1.58;
+}
+
+.cv-resume > *:first-child {
+  margin-top: 0;
+}
+
+.cv-resume h1 {
+  font-size: 2.15em;
+  line-height: 1.1;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0 0 4px;
+  color: hsl(var(--foreground));
+}
+
+.cv-resume h2 {
+  font-size: 1.1em;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: hsl(var(--foreground));
+  margin: 14px 0 8px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid hsl(var(--foreground));
+}
+
+.cv-resume h3 {
+  font-size: 1.05em;
+  font-weight: 600;
+  margin: 8px 0 1px;
+  color: hsl(var(--foreground));
+}
+
+.cv-resume p {
+  margin: 4px 0;
+}
+
+.cv-resume strong {
+  font-weight: 600;
+}
+
+.cv-resume em {
+  font-style: italic;
+}
+
+.cv-resume a {
+  color: hsl(var(--foreground));
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.cv-resume ul,
+.cv-resume ol {
+  margin: 4px 0;
+  padding-left: 16px;
+}
+
+.cv-resume li {
+  margin: 1px 0;
+}
+
+.cv-resume li::marker {
+  color: hsl(var(--muted-foreground));
+}
+
+.cv-resume hr {
+  border: 0;
+  border-top: 1px solid hsl(var(--border));
+  margin: 10px 0;
+}
+
+.cv-resume blockquote {
+  margin: 6px 0;
+  padding: 2px 10px;
+  border-left: 2px solid hsl(var(--foreground));
+  color: hsl(var(--muted-foreground));
+  font-style: italic;
+}
+
+.cv-resume code {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.92em;
+  background: hsl(var(--muted));
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+/* compact mode: 缩减段落间距约 20% */
+.cv-resume.is-compact h2 {
+  margin-top: 10px;
+  margin-bottom: 5px;
+}
+
+.cv-resume.is-compact h3 {
+  margin-top: 5px;
+}
+
+.cv-resume.is-compact p {
+  margin: 2px 0;
+}
+
+.cv-resume.is-compact ul,
+.cv-resume.is-compact ol {
+  margin: 2px 0;
+}
+
+.cv-resume.is-compact hr {
+  margin: 6px 0;
+}
+
+.cv-resume.is-compact {
+  line-height: 0.92;
+}
+
+/* ─── Print: body + JS-driven inline style overrides ──────────── */
+/* JS sets inline styles on paper-wrap (transform: scale) and paper
+   (width, minHeight). Tailwind print: utilities can't override inline
+   styles, so we keep these two rules with !important. */
+@media print {
+  body {
+    background: white !important;
+    overflow: visible !important;
+  }
+
+  .cv-paper-wrap {
+    transform: none !important;
+  }
+
+  .cv-paper {
+    box-shadow: none !important;
+    width: auto !important;
+    min-height: auto !important;
+  }
+}
