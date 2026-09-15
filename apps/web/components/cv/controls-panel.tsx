@@ -1,15 +1,24 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Download, Copy, Check, ZoomOut, ZoomIn } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { EditorState, PaperSize, Orientation, Margin } from "./editor-types";
-import { PAPER_SIZES, MARGINS } from "./editor-types";
+import type { EditorState, PaperSize, Orientation } from "./editor-types";
+import { PAPER_SIZES, isFreeSize, PADDING_RANGE } from "./editor-types";
+import React from "react";
 
 interface ControlsPanelProps {
   state: EditorState;
@@ -17,6 +26,7 @@ interface ControlsPanelProps {
   onExport: () => void;
   onCopyMarkdown: () => void;
   copySuccess: boolean;
+  exporting: boolean;
 }
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
@@ -77,21 +87,89 @@ function SegmentedGroup<T extends string>({
   );
 }
 
+/**
+ * Numeric input + slider pair. The raw text keeps its own state so typing
+ * is not fought by clamping; committed values are clamped to [min, max]
+ * and rounded to `precision` decimals (0 → integers).
+ */
+function NumberControl({
+  label,
+  value,
+  min,
+  max,
+  step,
+  precision = 0,
+  unit = "px",
+  onChange,
+}: {
+  label: string;
+  value: number;
+  min: number;
+  max: number;
+  step: number;
+  precision?: number;
+  unit?: string;
+  onChange: (v: number) => void;
+}) {
+  const format = (n: number) => String(Number(n.toFixed(precision)));
+  const [raw, setRaw] = useState(format(value));
+  useEffect(() => {
+    setRaw(format(value));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value]);
+
+  const commit = (v: string | number) => {
+    const n = typeof v === "number" ? v : parseFloat(String(v));
+    if (!Number.isFinite(n)) return;
+    const clamped = Math.min(max, Math.max(min, n));
+    onChange(precision > 0 ? Number(clamped.toFixed(precision)) : Math.round(clamped));
+  };
+
+  return (
+    <div className="flex flex-col gap-1.5">
+      <div className="flex items-center gap-2">
+        <span className="text-[13px] text-foreground flex-1">{label}</span>
+        <Input
+          type="number"
+          min={min}
+          max={max}
+          step={step}
+          value={raw}
+          onChange={(e) => {
+            setRaw(e.target.value);
+            commit(e.target.value);
+          }}
+          onBlur={() => commit(raw)}
+          className="h-7 w-16 px-1.5 text-right font-mono text-xs"
+        />
+        <span className="text-[11px] text-muted-foreground w-4">{unit}</span>
+      </div>
+      <Slider
+        min={min}
+        max={max}
+        step={step}
+        value={[value]}
+        onValueChange={(v) => {
+          const val = Array.isArray(v) ? (v[0] as number) : (v as number);
+          commit(val);
+        }}
+      />
+    </div>
+  );
+}
+
 export function ControlsPanel({
   state,
   onStateChange,
   onExport,
   onCopyMarkdown,
   copySuccess,
+  exporting,
 }: ControlsPanelProps) {
   const paperSizeOptions = (Object.keys(PAPER_SIZES) as PaperSize[]).map((k) => ({
     value: k,
     label: PAPER_SIZES[k].label,
-  }));
-
-  const marginOptions = (Object.keys(MARGINS) as Margin[]).map((k) => ({
-    value: k,
-    label: MARGINS[k].label,
+    dim: PAPER_SIZES[k].dim,
   }));
 
   return (
@@ -101,13 +179,31 @@ export function ControlsPanel({
           {/* Paper size */}
           <section className="flex flex-col gap-2">
             <SectionLabel>纸张大小</SectionLabel>
-            <SegmentedGroup
+            <Select
               value={state.paperSize}
-              options={paperSizeOptions}
-              onChange={(v) => onStateChange({ paperSize: v })}
-            />
+              items={paperSizeOptions}
+              onValueChange={(v) => {
+                if (v) onStateChange({ paperSize: v });
+              }}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {paperSizeOptions.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    <div className="flex flex-col leading-tight">
+                      <span className="font-medium">{opt.label}</span>
+                      <span className="text-[11px] text-muted-foreground">{opt.dim}</span>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <div className="text-[11px] text-muted-foreground leading-snug mt-0.5">
-              默认 A4，210 × 297 mm
+              {isFreeSize(state.paperSize)
+                ? "自由尺寸，内容不分页"
+                : `默认 ${PAPER_SIZES[state.paperSize].label}，${PAPER_SIZES[state.paperSize].dim}`}
             </div>
           </section>
 
@@ -134,11 +230,16 @@ export function ControlsPanel({
             <div className="flex items-center justify-between gap-3 rounded-md bg-muted/40 px-2.5 py-2">
               <div>
                 <div className="text-[13px] text-foreground leading-tight">智能一页</div>
-                <div className="text-[11px] text-muted-foreground mt-0.5">自动缩放内容至单页</div>
+                <div className="text-[11px] text-muted-foreground mt-0.5">
+                  {isFreeSize(state.paperSize)
+                    ? "自由尺寸模式下不可用"
+                    : "强制单页，自动调整块间距/行高容纳内容"}
+                </div>
               </div>
               <Switch
                 checked={state.smartFit}
                 onCheckedChange={(v) => onStateChange({ smartFit: v })}
+                disabled={isFreeSize(state.paperSize)}
               />
             </div>
             <div className="flex items-center justify-between gap-3 rounded-md bg-muted/40 px-2.5 py-2">
@@ -155,56 +256,42 @@ export function ControlsPanel({
 
           <Separator />
 
-          {/* Margins */}
+          {/* Margins — px numeric input + slider, ported from Vue */}
           <section className="flex flex-col gap-2">
             <SectionLabel>页边距</SectionLabel>
-            <SegmentedGroup
-              value={state.margin}
-              options={marginOptions}
-              onChange={(v) => onStateChange({ margin: v })}
+            <NumberControl
+              label="左右边距"
+              value={state.paddingX}
+              min={PADDING_RANGE.min}
+              max={PADDING_RANGE.max}
+              step={1}
+              onChange={(v) => onStateChange({ paddingX: v })}
+            />
+            <NumberControl
+              label="上下边距"
+              value={state.paddingY}
+              min={PADDING_RANGE.min}
+              max={PADDING_RANGE.max}
+              step={1}
+              onChange={(v) => onStateChange({ paddingY: v })}
             />
           </section>
 
           <Separator />
 
-          {/* Font size + line height */}
-          <section className="flex flex-col gap-4">
-            <div className="flex flex-col gap-1.5">
-              <div className="flex justify-between items-baseline">
-                <span className="text-[13px] text-foreground">正文字号</span>
-                <span className="font-mono text-xs text-muted-foreground">
-                  {state.fontSize.toFixed(1)} px
-                </span>
-              </div>
-              <Slider
-                min={11}
-                max={17}
-                step={0.5}
-                value={[state.fontSize]}
-                onValueChange={(v) => {
-                  const val = Array.isArray(v) ? (v[0] as number) : (v as number);
-                  onStateChange({ fontSize: val });
-                }}
-              />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <div className="flex justify-between items-baseline">
-                <span className="text-[13px] text-foreground">行高</span>
-                <span className="font-mono text-xs text-muted-foreground">
-                  {state.lineHeight.toFixed(2)}
-                </span>
-              </div>
-              <Slider
-                min={1.35}
-                max={1.85}
-                step={0.02}
-                value={[state.lineHeight]}
-                onValueChange={(v) => {
-                  const val = Array.isArray(v) ? (v[0] as number) : (v as number);
-                  onStateChange({ lineHeight: val });
-                }}
-              />
-            </div>
+          {/* Line height — input + slider, same pattern as margins */}
+          <section className="flex flex-col gap-2">
+            <SectionLabel>行高</SectionLabel>
+            <NumberControl
+              label="倍率"
+              value={state.lineHeight}
+              min={1.35}
+              max={1.85}
+              step={0.02}
+              precision={2}
+              unit=""
+              onChange={(v) => onStateChange({ lineHeight: v })}
+            />
           </section>
 
           <Separator />
@@ -240,16 +327,16 @@ export function ControlsPanel({
               >
                 <ZoomIn className="h-3 w-3" />
               </Button>
-              <span className="font-mono text-xs text-foreground min-w-[44px] text-center">
+              <span className="font-mono text-xs text-foreground min-w-11 text-center">
                 {state.zoom}%
               </span>
             </div>
           </section>
 
           <div className="mt-auto flex flex-col gap-2 pt-2">
-            <Button className="w-full justify-center gap-1.5" onClick={onExport}>
-              <Download className="h-3.5 w-3.5" />
-              导出为 PDF
+            <Button className="w-full justify-center gap-1.5" onClick={onExport} disabled={exporting}>
+              <Download className={cn("h-3.5 w-3.5", exporting && "animate-pulse")} />
+              {exporting ? "导出中..." : "导出为 PDF"}
             </Button>
             <Button variant="outline" className="w-full justify-center gap-1.5" onClick={onCopyMarkdown}>
               {copySuccess ? (

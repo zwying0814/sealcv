@@ -153,9 +153,35 @@
     transform: none !important;
   }
 
-  .cv-paper {
+  /* 自由尺寸：单页，自然内容 */
+  .cv-paper.cv-free {
     box-shadow: none !important;
     width: auto !important;
     min-height: auto !important;
+  }
+
+  /* 分页模式：屏幕与打印使用同一组分页 DOM，
+     每张 .cv-paper 精确对应一个打印页 */
+  .cv-paper {
+    box-shadow: none !important;
+  }
+
+  /* 强制每张纸从新的一页开始，保证 PDF 分页与预览一致 */
+  .cv-pages .cv-paper + .cv-paper {
+    break-before: page;
+    page-break-before: always;
+  }
+
+  /* 隐藏测量容器 */
+  .cv-measure {
+    display: none !important;
+  }
+
+  /* 避免标题和列表在分页时被截断 */
+  .cv-resume h1,
+  .cv-resume h2,
+  .cv-resume h3 {
+    break-after: avoid;
+    page-break-after: avoid;
   }
 }

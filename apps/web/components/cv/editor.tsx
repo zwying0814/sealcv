@@ -2,6 +2,8 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { marked } from "marked";
+import { snapdom } from "@zumer/snapdom";
+import { jsPDF } from "jspdf";
 import { Topbar } from "@/components/cv/topbar";
 import { EditorPanel } from "@/components/cv/editor-panel";
 import { Canvas } from "@/components/cv/canvas";
@@ -23,6 +25,7 @@ export default function ResumeEditor() {
   const [editorState, setEditorState] = useState<EditorState>(DEFAULT_EDITOR_STATE);
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -50,9 +53,71 @@ export default function ResumeEditor() {
     setIsPreviewMode((prev) => !prev);
   }, []);
 
-  const handleExport = useCallback(() => {
-    window.print();
-  }, []);
+  // PDF export ported from the Vue ControlPanel: snapdom renders every
+  // .cv-paper page to a canvas, jsPDF stitches them into one PDF.
+  // Falls back to the browser print dialog on failure.
+  const handleExport = useCallback(async () => {
+    if (exporting) return;
+    const nodes = Array.from(
+      document.querySelectorAll<HTMLElement>(".cv-pages .cv-paper, .cv-paper.cv-free"),
+    );
+    if (!nodes.length) {
+      window.print();
+      return;
+    }
+    setExporting(true);
+    // Neutralize the zoom transform so snapdom captures natural size.
+    const wrap = document.querySelector<HTMLElement>(".cv-paper-wrap");
+    const prevTransform = wrap?.style.transform ?? "";
+    if (wrap) wrap.style.transform = "none";
+    try {
+      const devicePixelRatio = window.devicePixelRatio || 1;
+      const captureScale = Math.min(4, Math.max(2, devicePixelRatio * 2));
+      const canvases: HTMLCanvasElement[] = [];
+      for (const node of nodes) {
+        const canvas = await snapdom.toCanvas(node, {
+          embedFonts: true,
+          outerTransforms: true,
+          outerShadows: false,
+          scale: captureScale,
+        });
+        canvases.push(canvas);
+      }
+      const pxToPt = (px: number) => (px * 72) / 96;
+      const first = canvases[0];
+      if (!first) {
+        window.print();
+        return;
+      }
+      const initialWidthPt = pxToPt(first.width);
+      const initialHeightPt = pxToPt(first.height);
+      const orientation = initialWidthPt > initialHeightPt ? "l" : "p";
+      const pdf = new jsPDF({
+        orientation,
+        unit: "pt",
+        format: [initialWidthPt, initialHeightPt],
+      });
+      canvases.forEach((canvas, idx) => {
+        if (idx > 0) {
+          const wPt = pxToPt(canvas.width);
+          const hPt = pxToPt(canvas.height);
+          pdf.addPage([wPt, hPt], wPt > hPt ? "l" : "p");
+        }
+        const widthPt = pxToPt(canvas.width);
+        const heightPt = pxToPt(canvas.height);
+        const imgData = canvas.toDataURL("image/png");
+        pdf.addImage(imgData, "PNG", 0, 0, widthPt, heightPt, undefined, "FAST");
+      });
+      const base = docTitle.replace(/\.md$/i, "").trim() || "sealcv";
+      pdf.save(`${base}.pdf`);
+    } catch (err) {
+      console.error(err);
+      window.print();
+    } finally {
+      if (wrap) wrap.style.transform = prevTransform;
+      setExporting(false);
+    }
+  }, [exporting, docTitle]);
 
   const handleCopyMarkdown = useCallback(async () => {
     try {
@@ -101,6 +166,7 @@ export default function ResumeEditor() {
             onExport={handleExport}
             onCopyMarkdown={handleCopyMarkdown}
             copySuccess={copySuccess}
+            exporting={exporting}
           />
         )}
       </div>
