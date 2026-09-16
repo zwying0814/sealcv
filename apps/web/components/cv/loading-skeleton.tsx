@@ -2,7 +2,7 @@ import Image from "next/image";
 
 export function LoadingSkeleton() {
   return (
-    <div className="flex min-h-screen flex-1 flex-col items-center justify-center bg-background">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background">
       <div className="flex flex-col items-center gap-4">
         <Image
           src="/logo.webp"

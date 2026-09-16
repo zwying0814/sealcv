@@ -9,6 +9,7 @@ interface CanvasProps {
   renderedHtml: string;
   state: EditorState;
   canvasRef: React.RefObject<HTMLDivElement | null>;
+  customCss?: string;
 }
 
 const MM_TO_PX = 3.7795;
@@ -50,7 +51,7 @@ function paginateHtml(
   return pages.length ? pages : [fallbackHtml];
 }
 
-export function Canvas({ renderedHtml, state, canvasRef }: CanvasProps) {
+export function Canvas({ renderedHtml, state, customCss, canvasRef }: CanvasProps) {
   const paperWrapRef = useRef<HTMLDivElement>(null);
   const measureRef = useRef<HTMLDivElement>(null);
   const smartCleanupRef = useRef<(() => void) | null>(null);
@@ -236,6 +237,8 @@ export function Canvas({ renderedHtml, state, canvasRef }: CanvasProps) {
       className="cv-canvas bg-muted relative min-w-0 overflow-auto flex justify-center p-[32px_24px_72px] print:bg-white print:p-0 print:overflow-visible"
       ref={canvasRef}
     >
+      {/* Inject user custom CSS into preview */}
+      {customCss && <style dangerouslySetInnerHTML={{ __html: customCss }} />}
       {/* Scaled wrapper */}
       <div
         className="cv-paper-wrap origin-top shrink-0 transition-transform duration-200 ease-[cubic-bezier(0.2,0,0,1)]"

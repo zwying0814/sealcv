@@ -8,15 +8,33 @@ import { Topbar } from "@/components/cv/topbar";
 import { EditorPanel } from "@/components/cv/editor-panel";
 import { Canvas } from "@/components/cv/canvas";
 import { ControlsPanel } from "@/components/cv/controls-panel";
+import { LoadingSkeleton } from "@/components/cv/loading-skeleton";
 import { DEFAULT_RESUME } from "@/components/cv/default-resume";
 import type { EditorState } from "@/components/cv/editor-types";
 import { DEFAULT_EDITOR_STATE } from "@/components/cv/editor-types";
+import { useLocalStorage } from "@/hooks/use-local-storage";
+import {
+  registerEqualSplitRowExtension,
+  registerCenterLineExtension,
+  registerIconInlineExtension,
+  registerStrongAdjacencyFix,
+} from "@/lib/marked-extensions";
 import "@/app/cv/editor.css";
 
 marked.setOptions({
   breaks: true,
   gfm: true,
 });
+
+let markedExtensionsRegistered = false;
+function ensureMarkedExtensions() {
+  if (markedExtensionsRegistered) return;
+  registerEqualSplitRowExtension();
+  registerCenterLineExtension();
+  registerIconInlineExtension();
+  registerStrongAdjacencyFix();
+  markedExtensionsRegistered = true;
+}
 
 export default function ResumeEditor() {
   const [docTitle, setDocTitle] = useState("林清和_高级产品设计师.md");
@@ -26,9 +44,22 @@ export default function ResumeEditor() {
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [customCss, setCustomCss] = useLocalStorage("cv-custom-css", "");
+  const [editorReady, setEditorReady] = useState(false);
 
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    ensureMarkedExtensions();
+
+    // Load Iconify web component for icon= syntax
+    if (!document.querySelector('script[src*="iconify-icon"]')) {
+      const script = document.createElement('script');
+      script.src = 'https://code.iconify.design/3/3.1.0/iconify.min.js';
+      script.async = true;
+      document.head.appendChild(script);
+    }
+  }, []);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -37,15 +68,12 @@ export default function ResumeEditor() {
     return () => clearTimeout(timer);
   }, [markdown]);
 
-  const charCount = markdown.replace(/\s/g, "").length;
-  const lineCount = markdown.split("\n").length;
-
   const handleStateChange = useCallback((update: Partial<EditorState>) => {
     setEditorState((prev) => ({ ...prev, ...update }));
   }, []);
 
   const handleUndo = useCallback(() => {
-    textareaRef.current?.focus();
+    // Monaco 编辑器有自己的撤销机制，这里只是保留接口
     document.execCommand("undo");
   }, []);
 
@@ -129,47 +157,58 @@ export default function ResumeEditor() {
     }
   }, [markdown]);
 
+  const handleEditorReady = useCallback(() => {
+    setEditorReady(true);
+  }, []);
+
   return (
-    <div className="grid h-screen w-screen grid-rows-[48px_1fr] overflow-hidden bg-muted/35 print:block print:h-auto print:overflow-visible">
-      <Topbar
-        docTitle={docTitle}
-        onDocTitleChange={setDocTitle}
-        onUndo={handleUndo}
-        onPreview={handlePreview}
-        onExport={handleExport}
-        isPreviewMode={isPreviewMode}
-      />
+    <>
+      {!editorReady && <LoadingSkeleton />}
       <div
-        className="grid h-full min-h-0 min-w-0 grid-cols-[420px_1fr_260px] print:block
+        className={`fixed inset-0 grid h-screen w-screen grid-rows-[48px_1fr] overflow-hidden bg-muted/35 transition-opacity duration-300 ${!editorReady && 'pointer-events-none'}`}
+        style={{ opacity: editorReady ? 1 : 0 }}
+      >
+        <Topbar
+          docTitle={docTitle}
+          onDocTitleChange={setDocTitle}
+          onUndo={handleUndo}
+          onPreview={handlePreview}
+          onExport={handleExport}
+          isPreviewMode={isPreviewMode}
+        />
+        <div
+          className="grid h-full min-h-0 min-w-0 grid-cols-[420px_1fr_260px] print:block
           [@media(max-width:1100px)]:grid-cols-[340px_1fr_240px]
           [@media(max-width:920px)]:grid-cols-1 [@media(max-width:920px)]:grid-rows-[auto_1fr_auto]"
-        style={isPreviewMode ? { gridTemplateColumns: "0 1fr 0" } : undefined}
-      >
-        {!isPreviewMode && (
-          <EditorPanel
-            markdown={markdown}
-            onChange={setMarkdown}
-            charCount={charCount}
-            lineCount={lineCount}
-            textareaRef={textareaRef}
-          />
-        )}
-        <Canvas
-          renderedHtml={renderedHtml}
-          state={editorState}
-          canvasRef={canvasRef}
-        />
-        {!isPreviewMode && (
-          <ControlsPanel
+          style={isPreviewMode ? { gridTemplateColumns: "0 1fr 0" } : undefined}
+        >
+          {!isPreviewMode && (
+            <EditorPanel
+              markdown={markdown}
+              onChange={setMarkdown}
+              customCss={customCss}
+              onCustomCssChange={setCustomCss}
+              onReady={handleEditorReady}
+            />
+          )}
+          <Canvas
+            renderedHtml={renderedHtml}
             state={editorState}
-            onStateChange={handleStateChange}
-            onExport={handleExport}
-            onCopyMarkdown={handleCopyMarkdown}
-            copySuccess={copySuccess}
-            exporting={exporting}
+            customCss={customCss}
+            canvasRef={canvasRef}
           />
-        )}
+          {!isPreviewMode && (
+            <ControlsPanel
+              state={editorState}
+              onStateChange={handleStateChange}
+              onExport={handleExport}
+              onCopyMarkdown={handleCopyMarkdown}
+              copySuccess={copySuccess}
+              exporting={exporting}
+            />
+          )}
+        </div>
       </div>
-    </div>
+    </>
   );
 }

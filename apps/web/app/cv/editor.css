@@ -139,6 +139,44 @@
   line-height: 0.92;
 }
 
+/* ─── Custom resume syntax extensions ────────────────────────── */
+/* Equal-split row: title + ~ rows render as flex columns */
+.cv-resume .lr {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.cv-resume .lr .lr-item:not(:last-child) {
+  flex: 1;
+}
+
+/* Centerline: % lines render centered */
+.cv-resume .centerline {
+  text-align: center;
+}
+
+/* Icon line: icon=name renders with iconify-icon web component */
+.cv-resume .icon-line {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.125rem;
+}
+
+.cv-resume .icon-line:has(+ .icon-line) {
+  margin-right: 0.875rem;
+}
+
+.cv-resume .icon-line iconify-icon {
+  font-size: 1.25em;
+  color: hsl(var(--foreground));
+}
+
+.cv-resume .icon-line .icon-text {
+  flex: 1;
+}
+
 /* ─── Print: body + JS-driven inline style overrides ──────────── */
 /* JS sets inline styles on paper-wrap (transform: scale) and paper
    (width, minHeight). Tailwind print: utilities can't override inline

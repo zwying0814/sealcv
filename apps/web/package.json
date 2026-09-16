@@ -10,12 +10,13 @@
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",
-    "@zumer/snapdom": "^2.24.18",
+    "@zumer/snapdom": "^3.0.0",
     "class-variance-authority": "^0.7.1",
     "cn": "^0.3.0",
     "jspdf": "^4.2.1",
     "lucide-react": "^1.46.0",
     "marked": "^18.0.13",
+    "monaco-editor": "^0.56.0",
     "next": "16.3.5",
     "react": "19.3.0",
     "react-dom": "19.3.0",
@@ -30,5 +31,5 @@
     "tailwindcss": "^4",
     "typescript": "^7"
   },
-  "packageManager": "pnpm@12.4.1"
+  "packageManager": "pnpm@12.4.2"
 }
