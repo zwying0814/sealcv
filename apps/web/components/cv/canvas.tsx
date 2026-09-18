@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import type { EditorState } from "./editor-types";
 import { PAPER_SIZES, isFreeSize } from "./editor-types";
 import { cn } from "@/lib/utils";
+import { PhotoOverlay } from "./photo-overlay";
 
 interface CanvasProps {
   renderedHtml: string;
@@ -59,10 +60,9 @@ export function Canvas({ renderedHtml, state, customCss, canvasRef }: CanvasProp
   // Per-page HTML blocks (paginated mode); null = not paginated / fallback.
   const [pages, setPages] = useState<string[] | null>(null);
 
-  const isLandscape = state.orientation === "landscape";
   const size = PAPER_SIZES[state.paperSize];
-  const paperWmm = isLandscape ? size.h : size.w;
-  const paperHmm = isLandscape ? size.w : size.h;
+  const paperWmm = size.w;
+  const paperHmm = size.h;
   const freeMode = isFreeSize(state.paperSize);
 
   // px-based page padding, same model as the Vue ControlPanel (5–80px)
@@ -112,7 +112,6 @@ export function Canvas({ renderedHtml, state, customCss, canvasRef }: CanvasProp
     state.lineHeight,
     state.compact,
     state.paperSize,
-    state.orientation,
     paddingX,
     paddingY,
   ]);
@@ -247,7 +246,7 @@ export function Canvas({ renderedHtml, state, customCss, canvasRef }: CanvasProp
         {freeMode ? (
           /* ── Free size: single continuous page ─────────────────── */
           <div
-            className="cv-paper cv-free relative rounded-[2px] bg-background print:shadow-none"
+            className="cv-paper cv-free relative rounded-xs bg-background print:shadow-none"
             style={{
               width: `${paperWmm}mm`,
               minHeight: "auto",
@@ -262,6 +261,7 @@ export function Canvas({ renderedHtml, state, customCss, canvasRef }: CanvasProp
                 dangerouslySetInnerHTML={{ __html: renderedHtml }}
               />
             </div>
+            <PhotoOverlay />
           </div>
         ) : (
           /* ── Paginated: one paper per packed page (block-aware) ── */
@@ -272,7 +272,7 @@ export function Canvas({ renderedHtml, state, customCss, canvasRef }: CanvasProp
             {displayPages.map((pageHtml, i) => (
               <div
                 key={i}
-                className="cv-paper relative overflow-hidden rounded-[2px] bg-background print:rounded-none print:shadow-none"
+                className="cv-paper relative overflow-hidden rounded-xs bg-background print:rounded-none print:shadow-none"
                 style={{
                   width: `${paperWmm}mm`,
                   height: `${paperHmm}mm`,
@@ -287,6 +287,7 @@ export function Canvas({ renderedHtml, state, customCss, canvasRef }: CanvasProp
                   style={typographyStyle}
                   dangerouslySetInnerHTML={{ __html: pageHtml }}
                 />
+                {i === 0 && <PhotoOverlay />}
               </div>
             ))}
           </div>

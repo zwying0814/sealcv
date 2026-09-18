@@ -1,9 +1,7 @@
 export type PaperSize = "a4" | "letter" | "legal" | "b5" | "free";
-export type Orientation = "portrait" | "landscape";
 
 export interface EditorState {
   paperSize: PaperSize;
-  orientation: Orientation;
   /** Horizontal page padding in px (5–80), mirrors the Vue ControlPanel */
   paddingX: number;
   /** Vertical page padding in px (5–80), mirrors the Vue ControlPanel */
@@ -46,7 +44,6 @@ export const PADDING_RANGE = { min: 5, max: 80 } as const;
 
 export const DEFAULT_EDITOR_STATE: EditorState = {
   paperSize: "a4",
-  orientation: "portrait",
   paddingX: 32,
   paddingY: 32,
   smartFit: false,

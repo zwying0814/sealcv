@@ -1,3 +1,36 @@
+/* ─── CV Resume Theme Variables ─────────────────────────────────── */
+/* 独立的 CSS 变量系统，用于控制简历预览主题，不干扰 shadcn 变量 */
+.cv-resume {
+  /* 字体配置 */
+  --text-size: 14px;
+  --line-height: 1.8;
+
+  --h1-size: 30px;
+  --h2-size: 12pt;
+  --h3-size: 10.5pt;
+  --blockquote-size: 9.5pt;
+
+  --text-font: 'Inter', 'Noto Sans SC', ui-sans-serif, system-ui, sans-serif;
+  --title-font: 'Inter', 'Noto Sans SC', ui-sans-serif, system-ui, sans-serif;
+  --link-font: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --code-font: 'Inter', ui-monospace, monospace;
+
+  /* 颜色配置 */
+  --cv-accent: oklab(0.57 -0.04 -0.21);
+  --cv-text-normal: #393939;
+  --cv-text-strong: #000;
+  --cv-link-color: var(--cv-accent);
+  --cv-h1-color: var(--cv-text-normal);
+  --cv-h2-color: var(--cv-accent);
+  --cv-h3-color: var(--cv-text-normal);
+  --cv-border-color: oklab(0.57 -0.04 -0.21);
+  --cv-bg-primary: oklab(0.57 -0.04 -0.21 / 0.05);
+
+  font-family: var(--text-font);
+  color: var(--cv-text-normal);
+  line-height: var(--line-height);
+}
+
 /* ─── Canvas scrollbar ────────────────────────────────────────── */
 .cv-canvas::-webkit-scrollbar {
   width: 10px;
@@ -21,95 +54,182 @@
 /* These target dynamically generated HTML from dangerouslySetInnerHTML,
    so they MUST remain as CSS — Tailwind classes can't be applied to
    unknown markup produced by the Markdown parser. */
-.cv-resume {
-  color: hsl(var(--foreground));
-  font-family: var(--font-sans, ui-sans-serif, system-ui, sans-serif);
-  line-height: 1.58;
-}
-
 .cv-resume > *:first-child {
   margin-top: 0;
 }
 
-.cv-resume h1 {
-  font-size: 2.15em;
-  line-height: 1.1;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  margin: 0 0 4px;
-  color: hsl(var(--foreground));
-}
-
-.cv-resume h2 {
-  font-size: 1.1em;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: hsl(var(--foreground));
-  margin: 14px 0 8px;
-  padding-bottom: 4px;
-  border-bottom: 1px solid hsl(var(--foreground));
-}
-
-.cv-resume h3 {
-  font-size: 1.05em;
-  font-weight: 600;
-  margin: 8px 0 1px;
-  color: hsl(var(--foreground));
-}
-
-.cv-resume p {
-  margin: 4px 0;
-}
-
-.cv-resume strong {
-  font-weight: 600;
-}
-
-.cv-resume em {
-  font-style: italic;
-}
-
-.cv-resume a {
-  color: hsl(var(--foreground));
-  text-decoration: underline;
-  text-underline-offset: 2px;
-}
-
-.cv-resume ul,
-.cv-resume ol {
-  margin: 4px 0;
-  padding-left: 16px;
-}
-
+.cv-resume p,
 .cv-resume li {
-  margin: 1px 0;
+  font-family: var(--text-font);
+  font-size: var(--text-size);
+  line-height: var(--line-height);
+  color: var(--cv-text-normal);
 }
 
-.cv-resume li::marker {
-  color: hsl(var(--muted-foreground));
-}
-
-.cv-resume hr {
-  border: 0;
-  border-top: 1px solid hsl(var(--border));
-  margin: 10px 0;
-}
-
-.cv-resume blockquote {
-  margin: 6px 0;
-  padding: 2px 10px;
-  border-left: 2px solid hsl(var(--foreground));
-  color: hsl(var(--muted-foreground));
-  font-style: italic;
+.cv-resume a,
+.cv-resume a span {
+  font-family: var(--link-font);
 }
 
 .cv-resume code {
-  font-family: var(--font-mono, ui-monospace, monospace);
-  font-size: 0.92em;
-  background: hsl(var(--muted));
-  padding: 1px 5px;
-  border-radius: 4px;
+  font-family: var(--code-font);
+}
+
+.cv-resume h1,
+.cv-resume h2,
+.cv-resume h3 {
+  font-weight: bold;
+  font-family: var(--title-font);
+}
+
+.cv-resume h1 {
+  font-size: var(--h1-size);
+  color: var(--cv-h1-color);
+  line-height: 2;
+  border-bottom: 0;
+}
+
+.cv-resume h2 {
+  color: var(--cv-h2-color);
+  font-size: var(--h2-size);
+  border-bottom: 1px solid var(--cv-border-color);
+  margin-top: 2.4mm;
+  margin-bottom: 1.9mm;
+  line-height: 1;
+  padding: 1mm 0;
+}
+
+.cv-resume h3,
+.cv-resume h4,
+.cv-resume h5,
+.cv-resume h6 {
+  color: var(--cv-h3-color);
+  line-height: 1.8;
+  font-size: var(--h3-size);
+}
+
+.cv-resume h3 a,
+.cv-resume h4 a,
+.cv-resume h5 a,
+.cv-resume h6 a {
+  font-weight: normal;
+  font-size: calc(var(--h3-size) - 0.5pt);
+}
+
+.cv-resume .md-math-block,
+.cv-resume .md-rawblock,
+.cv-resume h1,
+.cv-resume h3,
+.cv-resume h4,
+.cv-resume h5,
+.cv-resume h6,
+.cv-resume blockquote,
+.cv-resume p,
+.cv-resume li p {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.cv-resume strong {
+  color: var(--cv-text-strong);
+}
+
+/* List */
+.cv-resume ul {
+  list-style-type: '\2022';
+  padding-inline-start: 3mm;
+  padding-inline-end: 1mm;
+}
+
+.cv-resume ol {
+  padding-inline-start: 5mm;
+  padding-inline-end: 1mm;
+}
+
+.cv-resume ol li {
+  padding-left: 0;
+}
+
+.cv-resume ol,
+.cv-resume ul {
+  margin-block-start: 0;
+  margin-block-end: 0;
+  margin-inline-start: 0;
+  margin-inline-end: 0;
+}
+
+.cv-resume li {
+  padding-left: 1.5mm;
+}
+
+.cv-resume ul ::marker {
+  font-weight: bolder;
+}
+
+.cv-resume ol ::marker {
+  font-weight: normal;
+}
+
+/* Link */
+.cv-resume a {
+  color: var(--cv-link-color);
+  text-decoration: none;
+  font-weight: normal;
+}
+
+/* Code */
+.cv-resume code {
+  background-color: var(--cv-bg-primary);
+  color: var(--cv-accent);
+  font-size: 85%;
+  font-weight: bold;
+  padding: 1px 6px;
+}
+
+/* Block Quote */
+.cv-resume blockquote,
+.cv-resume blockquote * {
+  line-height: 1.6;
+  padding: 0;
+  border-inline-start: none;
+  font-size: var(--blockquote-size);
+}
+
+.cv-resume blockquote a {
+  color: var(--cv-text-normal);
+}
+
+.cv-resume blockquote {
+  background: unset;
+  border-left-width: unset;
+  border-left-style: unset;
+}
+
+/* Horizontal Line */
+.cv-resume hr {
+  border-top: 2px solid oklab(0.85 -0.01 -0.05 / 0.8);
+  border-bottom: none;
+  margin: 15mm 0 12mm 0;
+}
+
+/* Avatar */
+.cv-resume .avatar,
+.cv-resume img[alt="avatar"] {
+  top: -1mm;
+  right: -2mm;
+}
+
+/* Custom Class */
+.cv-resume .entry-title,
+.cv-resume div[alt="entry-title"] {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.cv-resume .icon,
+.cv-resume span[alt="icon"] {
+  color: var(--cv-accent);
 }
 
 /* compact mode: 缩减段落间距约 20% */

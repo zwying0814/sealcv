@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
@@ -14,9 +14,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Download, Copy, Check, ZoomOut, ZoomIn } from "lucide-react";
+import { Download, Copy, Check, ZoomOut, ZoomIn, Upload } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { EditorState, PaperSize, Orientation } from "./editor-types";
+import { usePhoto } from "@/hooks/use-photo";
+import type { EditorState, PaperSize } from "./editor-types";
 import { PAPER_SIZES, isFreeSize, PADDING_RANGE } from "./editor-types";
 import React from "react";
 
@@ -166,11 +167,34 @@ export function ControlsPanel({
   copySuccess,
   exporting,
 }: ControlsPanelProps) {
+  const { photo, setPhoto } = usePhoto();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const paperSizeOptions = (Object.keys(PAPER_SIZES) as PaperSize[]).map((k) => ({
     value: k,
     label: PAPER_SIZES[k].label,
     dim: PAPER_SIZES[k].dim,
   }));
+
+  const handlePhotoUpload = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const base64 = event.target?.result as string;
+      setPhoto({ ...photo, src: base64 });
+    };
+    reader.readAsDataURL(file);
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
 
   return (
     <aside className="flex flex-col min-h-0 min-w-0 overflow-hidden border-l bg-background print:hidden">
@@ -209,17 +233,33 @@ export function ControlsPanel({
 
           <Separator />
 
-          {/* Orientation */}
+          {/* Photo upload */}
           <section className="flex flex-col gap-2">
-            <SectionLabel>方向</SectionLabel>
-            <SegmentedGroup
-              value={state.orientation}
-              options={[
-                { value: "portrait" as Orientation, label: "纵向" },
-                { value: "landscape" as Orientation, label: "横向" },
-              ]}
-              onChange={(v) => onStateChange({ orientation: v })}
+            <SectionLabel>证件照</SectionLabel>
+            <Button variant="outline" className="w-full justify-center gap-1.5" onClick={handlePhotoUpload}>
+              <Upload className="h-3.5 w-3.5" />
+              {photo.src ? "更换照片" : "上传照片"}
+            </Button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handlePhotoChange}
+              className="hidden"
             />
+            {photo.src && (
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <span className="flex-1 truncate">已上传证件照</span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 text-xs"
+                  onClick={() => setPhoto({ ...photo, src: "" })}
+                >
+                  移除
+                </Button>
+              </div>
+            )}
           </section>
 
           <Separator />

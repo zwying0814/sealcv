@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Heading1,
@@ -13,6 +13,7 @@ import {
   ListOrdered,
   Quote,
   Minus,
+  Image,
 } from "lucide-react";
 
 type Monaco = typeof import("monaco-editor");
@@ -55,10 +56,46 @@ export function EditorPanel({
   const monacoRef = useRef<Monaco | null>(null);
   const mdModelRef = useRef<any>(null);
   const cssModelRef = useRef<any>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [activeTab, setActiveTab] = useState("markdown");
 
   const [charCount, setCharCount] = useState(0);
   const [lineCount, setLineCount] = useState(0);
+
+  const handleImageUpload = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const base64 = event.target?.result as string;
+      const editor = editorRef.current;
+      if (!editor) return;
+
+      const selection = editor.getSelection();
+      if (!selection) return;
+
+      const imageMarkdown = `![${file.name}](${base64})`;
+      editor.executeEdits("", [
+        {
+          range: selection,
+          text: imageMarkdown,
+          forceMoveMarkers: true,
+        },
+      ]);
+      editor.focus();
+    };
+    reader.readAsDataURL(file);
+
+    // 清空 input value 以便可以再次选择同一文件
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
 
   const handleToolbarAction = (kind: string) => {
     const editor = editorRef.current;
@@ -139,7 +176,6 @@ export function EditorPanel({
 
       const monaco = await import("monaco-editor");
 
-      // 新版本 Monaco (0.56.0+) 使用统一的语言包入口
       // @ts-expect-error - Monaco ESM contribution paths don't have type declarations
       await import("monaco-editor/basic-languages/monaco.contribution")
       // @ts-expect-error - Monaco ESM contribution paths don't have type declarations
@@ -204,9 +240,9 @@ export function EditorPanel({
     const editor = editorRef.current;
     if (!editor) return;
 
-    if (activeTab === "markdown" && mdModelRef.current) {
+    if (activeTab === "markdown" && mdModelRef.current && !mdModelRef.current.isDisposed()) {
       editor.setModel(mdModelRef.current);
-    } else if (activeTab === "css" && cssModelRef.current) {
+    } else if (activeTab === "css" && cssModelRef.current && !cssModelRef.current.isDisposed()) {
       editor.setModel(cssModelRef.current);
     }
   }, [activeTab]);
@@ -240,6 +276,7 @@ export function EditorPanel({
             <ToolbarButton icon={Bold} onClick={() => handleToolbarAction("bold")} />
             <ToolbarButton icon={Italic} onClick={() => handleToolbarAction("italic")} />
             <ToolbarButton icon={Link} onClick={() => handleToolbarAction("link")} />
+            <ToolbarButton icon={Image} onClick={handleImageUpload} />
             <div className="mx-1 h-4 w-px bg-border" />
             <ToolbarButton icon={List} onClick={() => handleToolbarAction("ul")} />
             <ToolbarButton icon={ListOrdered} onClick={() => handleToolbarAction("ol")} />
@@ -247,6 +284,14 @@ export function EditorPanel({
             <ToolbarButton icon={Minus} onClick={() => handleToolbarAction("hr")} />
           </div>
         )}
+
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleFileChange}
+          className="hidden"
+        />
 
         <div className="relative flex-1">
           <div ref={containerRef} className="absolute inset-0" />

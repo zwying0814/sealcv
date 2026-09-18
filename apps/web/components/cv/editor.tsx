@@ -55,7 +55,7 @@ export default function ResumeEditor() {
     // Load Iconify web component for icon= syntax
     if (!document.querySelector('script[src*="iconify-icon"]')) {
       const script = document.createElement('script');
-      script.src = 'https://code.iconify.design/3/3.1.0/iconify.min.js';
+      script.src = 'https://cdn.jsdmirror.com/npm/iconify-icon@3.0.3/dist/iconify-icon.min.js';
       script.async = true;
       document.head.appendChild(script);
     }
