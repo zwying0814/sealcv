@@ -37,11 +37,10 @@ function ensureMarkedExtensions() {
 }
 
 export default function ResumeEditor() {
-  const [docTitle, setDocTitle] = useState("林清和_高级产品设计师.md");
+  const [docTitle, setDocTitle] = useState("简历.md");
   const [markdown, setMarkdown] = useState(DEFAULT_RESUME);
   const [renderedHtml, setRenderedHtml] = useState("");
   const [editorState, setEditorState] = useState<EditorState>(DEFAULT_EDITOR_STATE);
-  const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [customCss, setCustomCss] = useLocalStorage("cv-custom-css", "");
@@ -75,10 +74,6 @@ export default function ResumeEditor() {
   const handleUndo = useCallback(() => {
     // Monaco 编辑器有自己的撤销机制，这里只是保留接口
     document.execCommand("undo");
-  }, []);
-
-  const handlePreview = useCallback(() => {
-    setIsPreviewMode((prev) => !prev);
   }, []);
 
   // PDF export ported from the Vue ControlPanel: snapdom renders every
@@ -172,41 +167,34 @@ export default function ResumeEditor() {
           docTitle={docTitle}
           onDocTitleChange={setDocTitle}
           onUndo={handleUndo}
-          onPreview={handlePreview}
           onExport={handleExport}
-          isPreviewMode={isPreviewMode}
         />
         <div
           className="grid h-full min-h-0 min-w-0 grid-cols-[420px_1fr_260px] print:block
           [@media(max-width:1100px)]:grid-cols-[340px_1fr_240px]
           [@media(max-width:920px)]:grid-cols-1 [@media(max-width:920px)]:grid-rows-[auto_1fr_auto]"
-          style={isPreviewMode ? { gridTemplateColumns: "0 1fr 0" } : undefined}
         >
-          {!isPreviewMode && (
-            <EditorPanel
-              markdown={markdown}
-              onChange={setMarkdown}
-              customCss={customCss}
-              onCustomCssChange={setCustomCss}
-              onReady={handleEditorReady}
-            />
-          )}
+          <EditorPanel
+            markdown={markdown}
+            onChange={setMarkdown}
+            customCss={customCss}
+            onCustomCssChange={setCustomCss}
+            onReady={handleEditorReady}
+          />
           <Canvas
             renderedHtml={renderedHtml}
             state={editorState}
             customCss={customCss}
             canvasRef={canvasRef}
           />
-          {!isPreviewMode && (
-            <ControlsPanel
-              state={editorState}
-              onStateChange={handleStateChange}
-              onExport={handleExport}
-              onCopyMarkdown={handleCopyMarkdown}
-              copySuccess={copySuccess}
-              exporting={exporting}
-            />
-          )}
+          <ControlsPanel
+            state={editorState}
+            onStateChange={handleStateChange}
+            onExport={handleExport}
+            onCopyMarkdown={handleCopyMarkdown}
+            copySuccess={copySuccess}
+            exporting={exporting}
+          />
         </div>
       </div>
     </>

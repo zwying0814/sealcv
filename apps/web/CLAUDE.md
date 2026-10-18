@@ -58,10 +58,10 @@ The editor state (markdown, paper size, zoom, margins, etc.) lives entirely clie
 components/
   cv/              # The editor and its parts
     editor.tsx        # Main orchestrator — owns state, wires Topbar + EditorPanel + Canvas + ControlsPanel
-    editor-panel.tsx  # Left markdown textarea + toolbar
+    editor-panel.tsx  # Left panel: Monaco editor with Markdown / CSS tabs + toolbar
     canvas.tsx        # Right paper preview with zoom/smart-fit JS
     controls-panel.tsx# Right panel: paper size, orientation, margins, typography, zoom, export
-    topbar.tsx        # Top bar: logo, doc title, undo/preview/export
+    topbar.tsx        # Top bar: logo, doc title, undo/export
     editor-types.ts   # Shared types (PaperSize, Orientation, EditorState), constants (PAPER_SIZES, PADDING_RANGE), clampPadding
     default-resume.ts # Sample markdown (林清和, 高级产品设计师)
     loading-skeleton.tsx # Minimal spinner used by /cv during dynamic import

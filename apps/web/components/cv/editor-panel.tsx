@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   Heading1,
   Heading2,
@@ -51,8 +51,10 @@ export function EditorPanel({
   onCustomCssChange,
   onReady,
 }: EditorPanelProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const editorRef = useRef<any>(null);
+  const mdContainerRef = useRef<HTMLDivElement>(null);
+  const cssContainerRef = useRef<HTMLDivElement>(null);
+  const mdEditorRef = useRef<any>(null);
+  const cssEditorRef = useRef<any>(null);
   const monacoRef = useRef<Monaco | null>(null);
   const mdModelRef = useRef<any>(null);
   const cssModelRef = useRef<any>(null);
@@ -61,6 +63,8 @@ export function EditorPanel({
 
   const [charCount, setCharCount] = useState(0);
   const [lineCount, setLineCount] = useState(0);
+  const [cssCharCount, setCssCharCount] = useState(0);
+  const [cssLineCount, setCssLineCount] = useState(0);
 
   const handleImageUpload = () => {
     fileInputRef.current?.click();
@@ -73,7 +77,7 @@ export function EditorPanel({
     const reader = new FileReader();
     reader.onload = (event) => {
       const base64 = event.target?.result as string;
-      const editor = editorRef.current;
+      const editor = mdEditorRef.current;
       if (!editor) return;
 
       const selection = editor.getSelection();
@@ -98,7 +102,7 @@ export function EditorPanel({
   };
 
   const handleToolbarAction = (kind: string) => {
-    const editor = editorRef.current;
+    const editor = mdEditorRef.current;
     if (!editor) return;
 
     const selection = editor.getSelection();
@@ -181,7 +185,7 @@ export function EditorPanel({
       // @ts-expect-error - Monaco ESM contribution paths don't have type declarations
       await import("monaco-editor/language/css/monaco.contribution");
 
-      if (disposed || !containerRef.current) return;
+      if (disposed || !mdContainerRef.current || !cssContainerRef.current) return;
 
       monacoRef.current = monaco;
 
@@ -191,8 +195,7 @@ export function EditorPanel({
       const cssModel = monaco.editor.createModel(customCss, "css");
       cssModelRef.current = cssModel;
 
-      const editor = monaco.editor.create(containerRef.current, {
-        model: mdModel,
+      const baseOptions: Parameters<typeof monaco.editor.create>[1] = {
         theme: "vs-light",
         automaticLayout: true,
         minimap: { enabled: false },
@@ -204,9 +207,17 @@ export function EditorPanel({
         quickSuggestions: false,
         suggestOnTriggerCharacters: false,
         fontFamily: 'Consolas, "Noto Sans SC", monospace',
+      };
+
+      mdEditorRef.current = monaco.editor.create(mdContainerRef.current, {
+        ...baseOptions,
+        model: mdModel,
       });
 
-      editorRef.current = editor;
+      cssEditorRef.current = monaco.editor.create(cssContainerRef.current, {
+        ...baseOptions,
+        model: cssModel,
+      });
 
       mdModel.onDidChangeContent(() => {
         const value = mdModel.getValue();
@@ -216,11 +227,16 @@ export function EditorPanel({
       });
 
       cssModel.onDidChangeContent(() => {
-        onCustomCssChange(cssModel.getValue());
+        const value = cssModel.getValue();
+        onCustomCssChange(value);
+        setCssCharCount(value.replace(/\s/g, "").length);
+        setCssLineCount(value.split("\n").length);
       });
 
       setCharCount(markdown.replace(/\s/g, "").length);
       setLineCount(markdown.split("\n").length);
+      setCssCharCount(customCss.replace(/\s/g, "").length);
+      setCssLineCount(customCss.split("\n").length);
 
       // 编辑器初始化完成，通知父组件
       onReady?.();
@@ -230,22 +246,12 @@ export function EditorPanel({
 
     return () => {
       disposed = true;
+      mdEditorRef.current?.dispose();
+      cssEditorRef.current?.dispose();
       mdModelRef.current?.dispose();
       cssModelRef.current?.dispose();
-      editorRef.current?.dispose();
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
-    const editor = editorRef.current;
-    if (!editor) return;
-
-    if (activeTab === "markdown" && mdModelRef.current && !mdModelRef.current.isDisposed()) {
-      editor.setModel(mdModelRef.current);
-    } else if (activeTab === "css" && cssModelRef.current && !cssModelRef.current.isDisposed()) {
-      editor.setModel(cssModelRef.current);
-    }
-  }, [activeTab]);
 
   useEffect(() => {
     const model = mdModelRef.current;
@@ -259,7 +265,11 @@ export function EditorPanel({
 
   return (
     <div className="flex h-full flex-col">
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-1 flex-col">
+      <Tabs
+        value={activeTab}
+        onValueChange={setActiveTab}
+        className="min-h-0 flex-1 gap-0"
+      >
         <div className="border-b px-4 py-2">
           <TabsList>
             <TabsTrigger value="markdown">Markdown</TabsTrigger>
@@ -267,7 +277,11 @@ export function EditorPanel({
           </TabsList>
         </div>
 
-        {activeTab === "markdown" && (
+        <TabsContent
+          value="markdown"
+          keepMounted
+          className="mt-0 flex min-h-0 flex-1 flex-col"
+        >
           <div className="flex items-center gap-1 border-b px-4 py-2">
             <ToolbarButton icon={Heading1} onClick={() => handleToolbarAction("h1")} />
             <ToolbarButton icon={Heading2} onClick={() => handleToolbarAction("h2")} />
@@ -283,24 +297,42 @@ export function EditorPanel({
             <ToolbarButton icon={Quote} onClick={() => handleToolbarAction("quote")} />
             <ToolbarButton icon={Minus} onClick={() => handleToolbarAction("hr")} />
           </div>
-        )}
+          <div className="relative min-h-0 flex-1">
+            <div ref={mdContainerRef} className="absolute inset-0" />
+          </div>
+        </TabsContent>
 
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          onChange={handleFileChange}
-          className="hidden"
-        />
-
-        <div className="relative flex-1">
-          <div ref={containerRef} className="absolute inset-0" />
-        </div>
+        <TabsContent
+          value="css"
+          keepMounted
+          className="mt-0 flex min-h-0 flex-1 flex-col"
+        >
+          <div className="relative min-h-0 flex-1">
+            <div ref={cssContainerRef} className="absolute inset-0" />
+          </div>
+        </TabsContent>
       </Tabs>
 
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleFileChange}
+        className="hidden"
+      />
+
       <div className="flex items-center justify-between border-t px-4 py-2 text-xs text-muted-foreground">
-        <span>字数: {charCount}</span>
-        <span>行数: {lineCount}</span>
+        {activeTab === "markdown" ? (
+          <>
+            <span>字数: {charCount}</span>
+            <span>行数: {lineCount}</span>
+          </>
+        ) : (
+          <>
+            <span>字符: {cssCharCount}</span>
+            <span>行数: {cssLineCount}</span>
+          </>
+        )}
       </div>
     </div>
   );
