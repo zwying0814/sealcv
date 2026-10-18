@@ -4,53 +4,43 @@ import Link from "next/link";
 import Image from "next/image";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Undo2, Download } from "lucide-react";
+import { Download } from "lucide-react";
 
 interface TopbarProps {
   docTitle: string;
   onDocTitleChange: (title: string) => void;
-  onUndo: () => void;
   onExport: () => void;
 }
 
 export function Topbar({
   docTitle,
   onDocTitleChange,
-  onUndo,
   onExport,
 }: TopbarProps) {
   return (
-    <header className="flex h-12 items-center gap-6 border-b bg-background px-5 print:hidden">
-      <Link href="/" className="flex items-center gap-2 shrink-0">
+    <header className="flex h-12 items-center gap-3 border-b bg-background px-3 print:hidden sm:gap-6 sm:px-5">
+      <Link href="/" className="flex shrink-0 items-center gap-2">
         <Image src="/logo.webp" alt="SealCV" width={24} height={24} className="rounded-md" />
-        <span className="font-semibold text-[15px] tracking-tight">SealCV</span>
+        <span className="hidden font-semibold text-[15px] tracking-tight sm:inline">SealCV</span>
       </Link>
 
-      <span className="flex items-center gap-2 text-sm text-muted-foreground">
-        <span className="text-border">/</span>
+      <span className="flex min-w-0 flex-1 items-center gap-2 text-sm text-muted-foreground sm:flex-none">
+        <span className="hidden text-border sm:inline">/</span>
         <Input
           value={docTitle}
           onChange={(e) => onDocTitleChange(e.target.value)}
           spellCheck={false}
-          className="h-7 min-w-[200px] border-transparent bg-transparent px-2 text-sm text-foreground shadow-none placeholder:text-muted-foreground hover:bg-muted/50 focus-visible:bg-background focus-visible:border-border"
+          className="h-7 min-w-0 border-transparent bg-transparent px-2 text-sm text-foreground shadow-none placeholder:text-muted-foreground hover:bg-muted/50 focus-visible:border-border focus-visible:bg-background sm:min-w-[200px]"
         />
       </span>
 
-      <div className="flex-1" />
+      <div className="hidden flex-1 sm:block" />
 
-      <div className="flex items-center gap-2">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onUndo}
-          className="gap-1.5"
-        >
-          <Undo2 className="h-3.5 w-3.5" />
-          撤销
-        </Button>
+      <div className="flex shrink-0 items-center gap-2">
         <Button size="sm" onClick={onExport} className="gap-1.5">
           <Download className="h-3.5 w-3.5" />
-          导出 PDF
+          <span className="hidden sm:inline">导出 PDF</span>
+          <span className="sm:hidden">导出</span>
         </Button>
       </div>
     </header>

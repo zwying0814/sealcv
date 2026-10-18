@@ -13,7 +13,6 @@ import {
   ListOrdered,
   Quote,
   Minus,
-  Image,
 } from "lucide-react";
 
 type Monaco = typeof import("monaco-editor");
@@ -58,48 +57,12 @@ export function EditorPanel({
   const monacoRef = useRef<Monaco | null>(null);
   const mdModelRef = useRef<any>(null);
   const cssModelRef = useRef<any>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const [activeTab, setActiveTab] = useState("markdown");
 
   const [charCount, setCharCount] = useState(0);
   const [lineCount, setLineCount] = useState(0);
   const [cssCharCount, setCssCharCount] = useState(0);
   const [cssLineCount, setCssLineCount] = useState(0);
-
-  const handleImageUpload = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const base64 = event.target?.result as string;
-      const editor = mdEditorRef.current;
-      if (!editor) return;
-
-      const selection = editor.getSelection();
-      if (!selection) return;
-
-      const imageMarkdown = `![${file.name}](${base64})`;
-      editor.executeEdits("", [
-        {
-          range: selection,
-          text: imageMarkdown,
-          forceMoveMarkers: true,
-        },
-      ]);
-      editor.focus();
-    };
-    reader.readAsDataURL(file);
-
-    // 清空 input value 以便可以再次选择同一文件
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
-  };
 
   const handleToolbarAction = (kind: string) => {
     const editor = mdEditorRef.current;
@@ -207,6 +170,13 @@ export function EditorPanel({
         quickSuggestions: false,
         suggestOnTriggerCharacters: false,
         fontFamily: 'Consolas, "Noto Sans SC", monospace',
+        // Word wrap is on, so a horizontal scrollbar is never meaningful.
+        // Hiding it also prevents it flashing while the panel is resized.
+        scrollbar: {
+          horizontal: "hidden",
+          vertical: "auto",
+          useShadows: false,
+        },
       };
 
       mdEditorRef.current = monaco.editor.create(mdContainerRef.current, {
@@ -264,12 +234,8 @@ export function EditorPanel({
   }, [markdown]);
 
   return (
-    <div className="flex h-full flex-col">
-      <Tabs
-        value={activeTab}
-        onValueChange={setActiveTab}
-        className="min-h-0 flex-1 gap-0"
-      >
+    <div className="flex h-full min-w-0 flex-col overflow-hidden">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="min-h-0 flex-1">
         <div className="border-b px-4 py-2">
           <TabsList>
             <TabsTrigger value="markdown">Markdown</TabsTrigger>
@@ -280,9 +246,9 @@ export function EditorPanel({
         <TabsContent
           value="markdown"
           keepMounted
-          className="mt-0 flex min-h-0 flex-1 flex-col"
+          className="flex min-h-0 flex-col"
         >
-          <div className="flex items-center gap-1 border-b px-4 py-2">
+          <div className="flex flex-wrap items-center gap-1 border-b px-4 py-2">
             <ToolbarButton icon={Heading1} onClick={() => handleToolbarAction("h1")} />
             <ToolbarButton icon={Heading2} onClick={() => handleToolbarAction("h2")} />
             <ToolbarButton icon={Heading3} onClick={() => handleToolbarAction("h3")} />
@@ -290,7 +256,6 @@ export function EditorPanel({
             <ToolbarButton icon={Bold} onClick={() => handleToolbarAction("bold")} />
             <ToolbarButton icon={Italic} onClick={() => handleToolbarAction("italic")} />
             <ToolbarButton icon={Link} onClick={() => handleToolbarAction("link")} />
-            <ToolbarButton icon={Image} onClick={handleImageUpload} />
             <div className="mx-1 h-4 w-px bg-border" />
             <ToolbarButton icon={List} onClick={() => handleToolbarAction("ul")} />
             <ToolbarButton icon={ListOrdered} onClick={() => handleToolbarAction("ol")} />
@@ -305,21 +270,13 @@ export function EditorPanel({
         <TabsContent
           value="css"
           keepMounted
-          className="mt-0 flex min-h-0 flex-1 flex-col"
+          className="flex min-h-0 flex-col"
         >
           <div className="relative min-h-0 flex-1">
             <div ref={cssContainerRef} className="absolute inset-0" />
           </div>
         </TabsContent>
       </Tabs>
-
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        onChange={handleFileChange}
-        className="hidden"
-      />
 
       <div className="flex items-center justify-between border-t px-4 py-2 text-xs text-muted-foreground">
         {activeTab === "markdown" ? (

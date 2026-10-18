@@ -5,14 +5,28 @@ import { marked } from "marked";
 import { snapdom } from "@zumer/snapdom";
 import { jsPDF } from "jspdf";
 import { Topbar } from "@/components/cv/topbar";
+import { Button } from "@/components/ui/button";
 import { EditorPanel } from "@/components/cv/editor-panel";
 import { Canvas } from "@/components/cv/canvas";
 import { ControlsPanel } from "@/components/cv/controls-panel";
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from "@/components/ui/resizable";
 import { LoadingSkeleton } from "@/components/cv/loading-skeleton";
 import { DEFAULT_RESUME } from "@/components/cv/default-resume";
 import type { EditorState } from "@/components/cv/editor-types";
 import { DEFAULT_EDITOR_STATE } from "@/components/cv/editor-types";
 import { useLocalStorage } from "@/hooks/use-local-storage";
+import { useMediaQuery } from "@/hooks/use-media-query";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
+import { PencilRuler, View, Settings } from "lucide-react";
 import {
   registerEqualSplitRowExtension,
   registerCenterLineExtension,
@@ -47,6 +61,14 @@ export default function ResumeEditor() {
   const [editorReady, setEditorReady] = useState(false);
 
   const canvasRef = useRef<HTMLDivElement>(null);
+  // Below 920px the editor stacks vertically and resizing is disabled.
+  // Only one layout is mounted at a time because Canvas and the PDF export
+  // rely on document-wide selectors (.cv-pages .cv-resume, .cv-paper, @page).
+  const isNarrow = useMediaQuery("(max-width: 920px)");
+  // Phones get a tabbed editor/preview layout ported from the Vue version.
+  const isMobile = useMediaQuery("(max-width: 767px)");
+  const [mobileTab, setMobileTab] = useState<"editor" | "preview">("editor");
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   useEffect(() => {
     ensureMarkedExtensions();
@@ -69,11 +91,6 @@ export default function ResumeEditor() {
 
   const handleStateChange = useCallback((update: Partial<EditorState>) => {
     setEditorState((prev) => ({ ...prev, ...update }));
-  }, []);
-
-  const handleUndo = useCallback(() => {
-    // Monaco 编辑器有自己的撤销机制，这里只是保留接口
-    document.execCommand("undo");
   }, []);
 
   // PDF export ported from the Vue ControlPanel: snapdom renders every
@@ -160,42 +177,164 @@ export default function ResumeEditor() {
     <>
       {!editorReady && <LoadingSkeleton />}
       <div
-        className={`fixed inset-0 grid h-screen w-screen grid-rows-[48px_1fr] overflow-hidden bg-muted/35 transition-opacity duration-300 ${!editorReady && 'pointer-events-none'}`}
+        className={`fixed inset-0 grid h-dvh w-screen grid-rows-[48px_1fr] overflow-hidden bg-muted/35 transition-opacity duration-300 ${!editorReady && 'pointer-events-none'}`}
         style={{ opacity: editorReady ? 1 : 0 }}
       >
         <Topbar
           docTitle={docTitle}
           onDocTitleChange={setDocTitle}
-          onUndo={handleUndo}
           onExport={handleExport}
         />
-        <div
-          className="grid h-full min-h-0 min-w-0 grid-cols-[420px_1fr_260px] print:block
-          [@media(max-width:1100px)]:grid-cols-[340px_1fr_240px]
-          [@media(max-width:920px)]:grid-cols-1 [@media(max-width:920px)]:grid-rows-[auto_1fr_auto]"
-        >
-          <EditorPanel
-            markdown={markdown}
-            onChange={setMarkdown}
-            customCss={customCss}
-            onCustomCssChange={setCustomCss}
-            onReady={handleEditorReady}
-          />
-          <Canvas
-            renderedHtml={renderedHtml}
-            state={editorState}
-            customCss={customCss}
-            canvasRef={canvasRef}
-          />
-          <ControlsPanel
-            state={editorState}
-            onStateChange={handleStateChange}
-            onExport={handleExport}
-            onCopyMarkdown={handleCopyMarkdown}
-            copySuccess={copySuccess}
-            exporting={exporting}
-          />
-        </div>
+        {isNarrow ? (
+          isMobile ? (
+            /* ── Mobile: editor / preview tabs + settings drawer ── */
+            <div className="flex h-full min-h-0 min-w-0 flex-col print:hidden">
+              <div className="min-h-0 flex-1 overflow-hidden">
+                <div
+                  className="h-full p-1"
+                  hidden={mobileTab !== "editor"}
+                >
+                  <EditorPanel
+                    markdown={markdown}
+                    onChange={setMarkdown}
+                    customCss={customCss}
+                    onCustomCssChange={setCustomCss}
+                    onReady={handleEditorReady}
+                  />
+                </div>
+                <div
+                  className="relative h-full"
+                  hidden={mobileTab !== "preview"}
+                >
+                  <Canvas
+                    renderedHtml={renderedHtml}
+                    state={editorState}
+                    customCss={customCss}
+                    canvasRef={canvasRef}
+                  />
+
+                  <Drawer open={settingsOpen} onOpenChange={setSettingsOpen}>
+                    <Button
+                      size="icon"
+                      aria-label="打开设置"
+                      className="absolute right-4 bottom-4 size-12 rounded-full shadow-lg"
+                      onClick={() => setSettingsOpen(true)}
+                    >
+                      <Settings className="size-5" />
+                    </Button>
+                    <DrawerContent className="max-h-[85dvh]">
+                      <DrawerHeader className="text-left">
+                        <DrawerTitle>设置</DrawerTitle>
+                      </DrawerHeader>
+                      <div className="min-h-0 flex-1 overflow-y-auto">
+                        <ControlsPanel
+                          state={editorState}
+                          onStateChange={handleStateChange}
+                          onExport={handleExport}
+                          onCopyMarkdown={handleCopyMarkdown}
+                          copySuccess={copySuccess}
+                          exporting={exporting}
+                        />
+                      </div>
+                    </DrawerContent>
+                  </Drawer>
+                </div>
+              </div>
+
+              <nav className="flex shrink-0 justify-around border-t bg-card px-2 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
+                <button
+                  type="button"
+                  className={`flex flex-col items-center gap-1 rounded-lg px-6 py-1.5 transition-colors ${
+                    mobileTab === "editor"
+                      ? "bg-primary/10 text-primary"
+                      : "text-muted-foreground"
+                  }`}
+                  onClick={() => setMobileTab("editor")}
+                >
+                  <PencilRuler className="size-5" />
+                  <span className="text-xs font-medium">编辑</span>
+                </button>
+                <button
+                  type="button"
+                  className={`flex flex-col items-center gap-1 rounded-lg px-6 py-1.5 transition-colors ${
+                    mobileTab === "preview"
+                      ? "bg-primary/10 text-primary"
+                      : "text-muted-foreground"
+                  }`}
+                  onClick={() => setMobileTab("preview")}
+                >
+                  <View className="size-5" />
+                  <span className="text-xs font-medium">预览</span>
+                </button>
+              </nav>
+            </div>
+          ) : (
+            /* ── Tablet: stacked editor / preview / settings ── */
+            <div className="grid h-full min-h-0 min-w-0 grid-cols-1 grid-rows-[auto_1fr_auto] print:block">
+              <EditorPanel
+                markdown={markdown}
+                onChange={setMarkdown}
+                customCss={customCss}
+                onCustomCssChange={setCustomCss}
+                onReady={handleEditorReady}
+              />
+              <Canvas
+                renderedHtml={renderedHtml}
+                state={editorState}
+                customCss={customCss}
+                canvasRef={canvasRef}
+              />
+              <ControlsPanel
+                state={editorState}
+                onStateChange={handleStateChange}
+                onExport={handleExport}
+                onCopyMarkdown={handleCopyMarkdown}
+                copySuccess={copySuccess}
+                exporting={exporting}
+              />
+            </div>
+          )
+        ) : (
+          <div className="flex h-full min-h-0 min-w-0 print:hidden">
+            <ResizablePanelGroup
+              orientation="horizontal"
+              className="h-full min-h-0 min-w-0 flex-1"
+            >
+              <ResizablePanel defaultSize="420px" minSize="280px" className="min-w-0">
+                <EditorPanel
+                  markdown={markdown}
+                  onChange={setMarkdown}
+                  customCss={customCss}
+                  onCustomCssChange={setCustomCss}
+                  onReady={handleEditorReady}
+                />
+              </ResizablePanel>
+
+              <ResizableHandle withHandle />
+
+              <ResizablePanel defaultSize="52%" minSize="280px" className="min-w-0">
+                <Canvas
+                  renderedHtml={renderedHtml}
+                  state={editorState}
+                  customCss={customCss}
+                  canvasRef={canvasRef}
+                />
+              </ResizablePanel>
+            </ResizablePanelGroup>
+
+            {/* Fixed-width settings column — never participates in resizing */}
+            <div className="flex w-[260px] shrink-0">
+              <ControlsPanel
+                state={editorState}
+                onStateChange={handleStateChange}
+                onExport={handleExport}
+                onCopyMarkdown={handleCopyMarkdown}
+                copySuccess={copySuccess}
+                exporting={exporting}
+              />
+            </div>
+          </div>
+        )}
       </div>
     </>
   );

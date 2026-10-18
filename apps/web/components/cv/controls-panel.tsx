@@ -4,7 +4,6 @@ import { useEffect, useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import {
@@ -197,8 +196,8 @@ export function ControlsPanel({
   };
 
   return (
-    <aside className="flex flex-col min-h-0 min-w-0 overflow-hidden border-l bg-background print:hidden">
-      <ScrollArea className="h-full">
+    <aside className="flex min-h-0 min-w-0 flex-col overflow-hidden bg-background print:hidden">
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
         <div className="flex flex-col gap-5 p-4 pb-8">
           {/* Paper size */}
           <section className="flex flex-col gap-2">
@@ -393,7 +392,7 @@ export function ControlsPanel({
             </Button>
           </div>
         </div>
-      </ScrollArea>
+      </div>
     </aside>
   );
 }

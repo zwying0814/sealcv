@@ -201,15 +201,21 @@ export function Canvas({ renderedHtml, state, customCss, canvasRef }: CanvasProp
     const update = () => {
       const canvasRect = canvasEl.getBoundingClientRect();
       const paperPx = paperWmm * MM_TO_PX;
-      const available = canvasRect.width - 80;
+      // The section's horizontal padding is 16px below `sm` and 32px above
+      // (p-4 / sm:p-8); reserve exactly that so the paper uses all the room.
+      const gutter = canvasRect.width < 640 ? 32 : 64;
+      const available = Math.max(0, canvasRect.width - gutter);
       const autoScale = Math.min(1, available / paperPx);
       const scale = autoScale * (state.zoom / 100);
       wrapEl.style.transform = `scale(${scale.toFixed(3)})`;
     };
 
     update();
-    window.addEventListener("resize", update);
-    return () => window.removeEventListener("resize", update);
+    // Observe the canvas itself: panel resizing and window resizing both
+    // change its width, and only the former fires no window resize event.
+    const observer = new ResizeObserver(update);
+    observer.observe(canvasEl);
+    return () => observer.disconnect();
   }, [paperWmm, state.zoom, canvasRef]);
 
   // ── Dynamic @page size injection for printing ───────────────────
@@ -233,7 +239,7 @@ export function Canvas({ renderedHtml, state, customCss, canvasRef }: CanvasProp
 
   return (
     <section
-      className="cv-canvas bg-muted relative min-w-0 overflow-auto flex justify-center p-[32px_24px_72px] print:bg-white print:p-0 print:overflow-visible"
+      className="cv-canvas relative flex min-w-0 justify-center overflow-auto bg-muted p-4 pb-6 print:overflow-visible print:bg-white print:p-0 sm:p-8 sm:pb-18"
       ref={canvasRef}
     >
       {/* Inject user custom CSS into preview */}
