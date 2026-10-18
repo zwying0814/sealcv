@@ -24,7 +24,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="zh-CN" className={cn(inter.variable, notoSansSC.variable)}>
+    <html lang="zh-CN" className={cn(inter.variable, notoSansSC.variable, "scroll-smooth")}>
       <body className="min-h-screen font-sans antialiased">{children}</body>
     </html>
   );
